@@ -14,7 +14,51 @@
 
 ## 快速开始
 
-### 方法一：单窗口启动（推荐）⭐⭐⭐
+### 方法一：Windows 服务（推荐，开机自启）⭐⭐⭐⭐⭐
+
+将 Node.js 和 Natapp 注册为 Windows 系统服务，实现：
+- ✅ 开机自动启动（Node.js + Natapp）
+- ✅ 后台运行，无需保持窗口
+- ✅ 服务崩溃自动重启
+- ✅ 统一的服务管理界面
+- ✅ 自动获取外网访问地址
+
+**一键安装所有服务**（以管理员身份运行）：
+```
+nssm\install-all-services.bat
+```
+
+**服务管理**：
+```
+nssm\start-all-services.bat      # 启动所有服务
+nssm\stop-all-services.bat       # 停止所有服务
+nssm\status-all-services.bat     # 查看状态（推荐）✨
+nssm\uninstall-all-services.bat  # 卸载所有服务
+```
+
+**只安装 Node.js 服务**（不需要外网访问）：
+```
+nssm\install-service.bat         # 仅安装 Node.js
+nssm\start-service.bat           # 启动
+nssm\stop-service.bat            # 停止
+nssm\status-service.bat          # 查看状态
+```
+
+**Windows 命令**：
+```
+net start MIOCardService    # 启动 Node.js（会自动启动 Natapp）
+net stop NatappTunnel       # 停止 Natapp
+net stop MIOCardService     # 停止 Node.js
+services.msc                # 打开服务管理器
+```
+
+**查看外网地址**：
+- 运行 `status-all-services.bat` 查看实时日志
+- 或查看日志文件：`logs\natapp-stdout.log`
+
+详细说明请查看：[nssm/README.md](nssm/README.md)
+
+### 方法二：单窗口启动⭐⭐⭐
 
 Windows 用户直接双击运行：
 
@@ -29,7 +73,7 @@ start-combined.bat
 - ✅ 关闭窗口自动停止所有服务
 - ✅ 自动记录 Node.js 日志到 `logs/` 目录
 
-### 方法二：双窗口启动
+### 方法三：双窗口启动
 
 ```
 start-all.bat
@@ -42,7 +86,7 @@ start-all.bat
 
 停止服务：双击 `stop-all.bat` 或直接关闭窗口
 
-### 方法三：手动启动
+### 方法四：手动启动
 
 #### 1. 安装依赖
 
@@ -124,8 +168,11 @@ view-logs.bat
 ```
 
 日志文件位置：`logs/` 目录
-- `node-YYYYMMDD-HHMMSS.log` - Node.js 服务器日志（自动记录）
-- natapp 不记录日志，可在 natapp 窗口直接查看实时输出
+- `service-stdout.log` - Node.js 服务标准输出日志
+- `service-stderr.log` - Node.js 服务错误日志
+- `natapp-stdout.log` - Natapp 服务输出日志（包含外网 URL）
+- `natapp-stderr.log` - Natapp 服务错误日志
+- `node-YYYYMMDD-HHMMSS.log` - 手动启动时的 Node.js 日志
 
 ### 测试模式
 
