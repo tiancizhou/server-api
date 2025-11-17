@@ -370,9 +370,168 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* 爱心装饰样式 */
+        .heart-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 30px;
+            color: rgba(255, 105, 180, 0.4);
+            animation: float 8s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(255, 105, 180, 0.3);
+        }
+
+        .heart::before {
+            content: '❤️';
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .heart-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        /* 不同位置的爱心动画 */
+        .heart:nth-child(1) {
+            left: 10%;
+            top: 20%;
+            animation-delay: 0s;
+            animation-duration: 7s;
+        }
+
+        .heart:nth-child(2) {
+            left: 85%;
+            top: 15%;
+            animation-delay: 1.5s;
+            animation-duration: 9s;
+        }
+
+        .heart:nth-child(3) {
+            left: 20%;
+            top: 60%;
+            animation-delay: 3s;
+            animation-duration: 8s;
+        }
+
+        .heart:nth-child(4) {
+            left: 75%;
+            top: 65%;
+            animation-delay: 4.5s;
+            animation-duration: 7.5s;
+        }
+
+        .heart:nth-child(5) {
+            left: 50%;
+            top: 10%;
+            animation-delay: 2s;
+            animation-duration: 8.5s;
+        }
+
+        .heart:nth-child(6) {
+            left: 90%;
+            top: 50%;
+            animation-delay: 5s;
+            animation-duration: 9.5s;
+        }
+
+        .heart:nth-child(7) {
+            left: 15%;
+            top: 80%;
+            animation-delay: 6s;
+            animation-duration: 8s;
+        }
+
+        .heart:nth-child(8) {
+            left: 65%;
+            top: 35%;
+            animation-delay: 1s;
+            animation-duration: 7s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) scale(1) rotate(0deg);
+                opacity: 0.3;
+            }
+            25% {
+                transform: translateY(-20px) scale(1.1) rotate(5deg);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translateY(-10px) scale(0.95) rotate(-5deg);
+                opacity: 0.4;
+            }
+            75% {
+                transform: translateY(-15px) scale(1.05) rotate(3deg);
+                opacity: 0.5;
+            }
+        }
+
+        /* 移动端优化 - 减少爱心数量 */
+        @media (max-width: 768px) {
+            .heart:nth-child(n+5) {
+                display: none;
+            }
+            .heart {
+                font-size: 24px;
+            }
+        }
+
+        /* 确保内容层在爱心上方 */
+        .container {
+            position: relative;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
+    <!-- 爱心装饰层 -->
+    <div class="heart-container">
+        <div class="heart">
+            <span class="heart-text">倩</span>
+        </div>
+        <div class="heart">
+            <span class="heart-text">倩</span>
+        </div>
+        <div class="heart">
+            <span class="heart-text">倩</span>
+        </div>
+        <div class="heart">
+            <span class="heart-text">倩</span>
+        </div>
+        <div class="heart">
+            <span class="heart-text">倩</span>
+        </div>
+        <div class="heart">
+            <span class="heart-text">倩</span>
+        </div>
+        <div class="heart">
+            <span class="heart-text">倩</span>
+        </div>
+        <div class="heart">
+            <span class="heart-text">倩</span>
+        </div>
+    </div>
+
     <div class="container">
         <h1 ondblclick="showTestMode()" style="user-select: none;">激活卡片 & 交易记录查询</h1>
         
