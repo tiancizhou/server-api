@@ -1,0 +1,15 @@
+{
+  "name": "mio-card-proxy",
+  "version": "1.0.0",
+  "description": "虚拟卡激活和查询中转服务",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0"
+  }
+}
+

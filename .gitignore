@@ -1,0 +1,9 @@
+node_modules/
+npm-debug.log
+.env
+.DS_Store
+
+# 日志文件
+logs/
+*.log
+

@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>激活卡片 & 交易记录查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
+                         'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="text"].invalid {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        input[type="text"].valid {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 500;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .info-section.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-id {
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .card-id-value {
+            color: #1f2937;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            margin-left: 8px;
+            font-size: 14px;
+        }
+
+        .copy-btn:hover {
+            color: #3b82f6;
+        }
+
+        .status-badges {
+            display: flex;
+            gap: 10px;
+        }
+
+        .badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #1f2937;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-value.large {
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .query-btn {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .query-btn:hover {
+            background: #c7d2fe;
+        }
+
+        .address-section {
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .activate-prompt {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .activate-prompt.show {
+            display: flex;
+        }
+
+        .activate-prompt-text {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .btn-activate {
+            background: #f59e0b;
+            color: white;
+            padding: 10px 30px;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-activate:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-activate:active {
+            transform: translateY(0);
+        }
+
+        .btn-activate:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 32px;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .input-section {
+                flex-direction: column;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .activate-prompt {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .btn-activate {
+                width: 100%;
+            }
+
+            /* 测试模式在移动端的样式 */
+            #testModeToggle:checked ~ .test-mode-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 ondblclick="showTestMode()" style="user-select: none;">激活卡片 & 交易记录查询</h1>
+        
+        <div class="card">
+            <!-- 测试模式开关 - 隐藏状态，双击标题显示 -->
+            <div id="testModePanel" style="margin-bottom: 15px; padding: 10px; background: #f3f4f6; border-radius: 8px; display: none; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; flex: 1; min-width: 250px;">
+                    <input type="checkbox" id="testModeToggle" onchange="toggleTestMode()" style="cursor: pointer;">
+                    <span style="font-weight: 500;">🧪 测试模式（使用模拟数据）</span>
+                </label>
+                <select id="testStatusSelect" style="padding: 8px 12px; border-radius: 5px; border: 1px solid #d1d5db; display: none; font-size: 14px; cursor: pointer;">
+                    <option value="未激活">模拟：未激活卡片</option>
+                    <option value="已激活">模拟：已激活卡片</option>
+                </select>
+            </div>
+
+            <div class="input-section">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="cardIdInput" 
+                        placeholder="请输入卡密 (支持 mio-xxx... 或 8-20位纯数字)"
+                        maxlength="40"
+                    >
+                </div>
+                <button class="btn btn-primary" id="fetchBtn" onclick="fetchCardInfo()">
+                    获取卡信息
+                </button>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+            
+            <!-- 激活提示区域 -->
+            <div class="activate-prompt" id="activatePrompt">
+                <div class="activate-prompt-text">
+                    ⚠️ 该卡片尚未激活，需要激活后才能使用。是否立即激活？
+                </div>
+                <button class="btn-activate" id="activateBtn" onclick="activateCard()">
+                    立即激活
+                </button>
+            </div>
+
+            <div class="info-section" id="infoSection">
+                <div class="info-header">
+                    <div class="card-id">
+                        卡密
+                        <span class="card-id-value" id="displayCardId"></span>
+                        <button class="copy-btn" onclick="copyToClipboard('displayCardId', event)" title="复制">📋</button>
+                    </div>
+                    <div class="status-badges">
+                        <span class="badge badge-info" id="limitBadge"></span>
+                        <span class="badge" id="statusBadge"></span>
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">卡号</span>
+                        <div class="info-value large">
+                            <span id="cardNumber"></span>
+                            <button class="copy-btn" onclick="copyToClipboard('cardNumber', event)" title="复制">📋</button>
+                            <button class="query-btn" onclick="alert('查询功能开发中')">🔍 查询</button>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">有效期</span>
+                        <div class="info-value">
+                            <span id="expDate"></span>
+                            <button class="copy-btn" onclick="copyToClipboard('expDate', event)" title="复制">📋</button>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">CVC</span>
+                        <div class="info-value">
+                            <span id="cvc"></span>
+                            <button class="copy-btn" onclick="copyToClipboard('cvc', event)" title="复制">📋</button>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">到期时间</span>
+                        <div class="info-value" id="deleteDate"></div>
+                    </div>
+                </div>
+
+                <div class="address-section">
+                    <div class="info-item">
+                        <span class="info-label">账单地址</span>
+                        <div class="info-value">
+                            <span id="address">131 Lupine Drive, Torrington, WY 82240</span>
+                            <button class="copy-btn" onclick="copyToClipboard('address', event)" title="复制">📋</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCardData = null;
+        let isTestMode = false;
+
+        // 显示测试模式面板（隐藏功能 - 双击标题触发）
+        function showTestMode() {
+            const panel = document.getElementById('testModePanel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'flex';
+                showSuccess('🧪 测试模式面板已显示');
+                setTimeout(() => {
+                    document.getElementById('successMessage').classList.remove('show');
+                }, 2000);
+            } else {
+                panel.style.display = 'none';
+                // 如果关闭面板，同时关闭测试模式
+                if (isTestMode) {
+                    document.getElementById('testModeToggle').checked = false;
+                    toggleTestMode();
+                }
+            }
+        }
+
+        // 测试模式开关
+        function toggleTestMode() {
+            isTestMode = document.getElementById('testModeToggle').checked;
+            const testStatusSelect = document.getElementById('testStatusSelect');
+            testStatusSelect.style.display = isTestMode ? 'block' : 'none';
+            
+            if (isTestMode) {
+                showSuccess('✅ 测试模式已启用 - 将使用模拟数据');
+            } else {
+                document.getElementById('successMessage').classList.remove('show');
+            }
+        }
+
+        // 生成模拟数据
+        function getMockData(status) {
+            const baseData = {
+                id: 'test-mock-card-12345',
+                card_limit: 100,
+                status: status,
+                delete_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            };
+
+            if (status === '已激活') {
+                return {
+                    ...baseData,
+                    card_number: '4532 1234 5678 9012',
+                    card_exp_date: '12/2025',
+                    card_cvc: '123'
+                };
+            } else {
+                return {
+                    ...baseData,
+                    card_number: null,
+                    card_exp_date: null,
+                    card_cvc: null
+                };
+            }
+        }
+
+        // 验证卡密格式
+        function validateCardId(cardId) {
+            // 格式1：mio- 开头 + UUID格式 (mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+            // 固定长度：40位（mio- 4位 + UUID 36位）
+            const mioPattern = /^mio-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            
+            // 格式2：纯数字格式（8-20位数字）
+            const numericPattern = /^\d{8,20}$/;
+            
+            return mioPattern.test(cardId) || numericPattern.test(cardId);
+        }
+        
+        // 获取详细的验证错误信息
+        function getValidationError(cardId) {
+            if (!cardId) {
+                return '请输入卡密';
+            }
+            
+            // 检查是否是纯数字
+            if (/^\d+$/.test(cardId)) {
+                if (cardId.length < 8) {
+                    return `纯数字格式至少需要8位，当前只有 ${cardId.length} 位`;
+                } else if (cardId.length > 20) {
+                    return `纯数字格式最多20位，当前有 ${cardId.length} 位`;
+                }
+            }
+            
+            // 检查是否以 mio- 开头
+            if (cardId.toLowerCase().startsWith('mio-')) {
+                if (cardId.length !== 40) {
+                    return `mio-UUID 格式应为40位，当前为 ${cardId.length} 位`;
+                }
+                return 'mio-UUID 格式不正确，请检查格式';
+            }
+            
+            return '卡密格式不正确！<br>支持的格式：<br>• mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx<br>• 8-20位纯数字（如：5236860109371684）';
+        }
+
+        async function fetchCardInfo() {
+            const cardId = document.getElementById('cardIdInput').value.trim();
+            const fetchBtn = document.getElementById('fetchBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const infoSection = document.getElementById('infoSection');
+            const activatePrompt = document.getElementById('activatePrompt');
+
+            // 清除之前的消息
+            errorMessage.classList.remove('show');
+            successMessage.classList.remove('show');
+            infoSection.classList.remove('show');
+            activatePrompt.classList.remove('show');
+
+            // 验证卡密格式
+            if (!validateCardId(cardId)) {
+                showError(getValidationError(cardId));
+                return;
+            }
+
+            // 显示加载状态
+            fetchBtn.disabled = true;
+            fetchBtn.innerHTML = '<span class="spinner"></span> 加载中...';
+
+            try {
+                let data;
+                
+                // 测试模式：使用模拟数据
+                if (isTestMode) {
+                    await new Promise(resolve => setTimeout(resolve, 500)); // 模拟网络延迟
+                    const testStatus = document.getElementById('testStatusSelect').value;
+                    data = {
+                        result: getMockData(testStatus),
+                        msg: '测试模式：模拟数据获取成功'
+                    };
+                } else {
+                    // 真实模式：调用API
+                    const response = await fetch(`/api/card/${cardId}`);
+                    data = await response.json();
+                }
+
+                if (!data.result) {
+                    showError(data.msg || '获取卡片信息失败');
+                    return;
+                }
+
+                currentCardData = data.result;
+
+                // 判断是否需要激活
+                if (data.result.status === '未激活') {
+                    // 显示激活提示
+                    showSuccess('⚠️ 卡片信息获取成功，但该卡片尚未激活');
+                    activatePrompt.classList.add('show');
+                } else {
+                    showSuccess('✅ 卡片信息获取成功！');
+                }
+
+                // 显示卡片信息
+                displayCardInfo(currentCardData);
+
+            } catch (error) {
+                showError('网络错误：' + error.message);
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtn.innerHTML = '获取卡信息';
+            }
+        }
+
+        async function activateCard() {
+            const cardId = document.getElementById('cardIdInput').value.trim();
+            const activateBtn = document.getElementById('activateBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const activatePrompt = document.getElementById('activatePrompt');
+
+            // 清除之前的错误消息
+            errorMessage.classList.remove('show');
+
+            // 显示加载状态
+            activateBtn.disabled = true;
+            activateBtn.innerHTML = '<span class="spinner"></span> 激活中...';
+
+            try {
+                let data;
+                
+                // 测试模式：使用模拟数据
+                if (isTestMode) {
+                    await new Promise(resolve => setTimeout(resolve, 800)); // 模拟网络延迟
+                    data = {
+                        result: getMockData('已激活'),
+                        msg: '测试模式：模拟激活成功'
+                    };
+                } else {
+                    // 真实模式：调用激活API
+                    const response = await fetch(`/api/card/activate/${cardId}`, {
+                        method: 'POST'
+                    });
+                    data = await response.json();
+                }
+
+                if (!data.result) {
+                    showError(data.msg || '激活失败');
+                    return;
+                }
+
+                // 更新当前卡片数据
+                currentCardData = data.result;
+                
+                // 隐藏激活提示
+                activatePrompt.classList.remove('show');
+                
+                // 显示成功消息
+                showSuccess('✅ 卡片激活成功！');
+
+                // 更新显示的卡片信息
+                displayCardInfo(currentCardData);
+
+            } catch (error) {
+                showError('网络错误：' + error.message);
+            } finally {
+                activateBtn.disabled = false;
+                activateBtn.innerHTML = '立即激活';
+            }
+        }
+
+        function displayCardInfo(data) {
+            const infoSection = document.getElementById('infoSection');
+            
+            document.getElementById('displayCardId').textContent = data.id;
+            document.getElementById('cardNumber').textContent = data.card_number || '未激活';
+            document.getElementById('expDate').textContent = data.card_exp_date || '未激活';
+            document.getElementById('cvc').textContent = data.card_cvc || '未激活';
+            document.getElementById('deleteDate').textContent = formatDateTime(data.delete_date);
+            
+            // 设置额度标签
+            document.getElementById('limitBadge').textContent = `额度: ${data.card_limit || 0}`;
+            
+            // 设置状态标签
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = data.status;
+            
+            if (data.status === '已激活') {
+                statusBadge.className = 'badge badge-success';
+            } else if (data.status === '未激活') {
+                statusBadge.className = 'badge badge-warning';
+            } else {
+                statusBadge.className = 'badge badge-info';
+            }
+
+            infoSection.classList.add('show');
+        }
+
+        function formatDateTime(dateString) {
+            if (!dateString) return '未设置';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).replace(/\//g, '-');
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.innerHTML = message; // 支持 HTML 格式
+            errorMessage.classList.add('show');
+        }
+
+        function showSuccess(message) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.innerHTML = message; // 支持 HTML 格式
+            successMessage.classList.add('show');
+        }
+
+        function copyToClipboard(elementId, event) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent.trim();
+            const btn = event.target;
+            const originalText = btn.textContent;
+            
+            // 成功反馈
+            function showSuccess() {
+                btn.textContent = '✓';
+                btn.style.color = '#10b981';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.color = '';
+                }, 1000);
+            }
+            
+            // 方法1：尝试使用现代 Clipboard API（仅在 HTTPS 或 localhost 下可用）
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showSuccess();
+                }).catch(err => {
+                    // 如果失败，尝试降级方案
+                    console.log('Clipboard API 失败，尝试降级方案:', err);
+                    fallbackCopy(text, showSuccess);
+                });
+            } else {
+                // 方法2：降级方案 - 使用传统方法（兼容 HTTP 环境）
+                fallbackCopy(text, showSuccess);
+            }
+        }
+        
+        // 降级复制方案 - 兼容非 HTTPS 环境（如内网穿透）
+        function fallbackCopy(text, onSuccess) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.top = '-9999px';
+            textarea.style.left = '-9999px';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            
+            try {
+                textarea.select();
+                textarea.setSelectionRange(0, text.length);
+                
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    onSuccess();
+                } else {
+                    throw new Error('execCommand 返回 false');
+                }
+            } catch (err) {
+                console.error('降级复制方案也失败:', err);
+                alert('复制失败，请手动复制：\n' + text);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // 实时验证卡密格式
+        document.getElementById('cardIdInput').addEventListener('input', function(e) {
+            const input = e.target;
+            const value = input.value.trim();
+            
+            // 清除之前的验证状态
+            input.classList.remove('valid', 'invalid');
+            
+            // 如果有内容，进行验证
+            if (value) {
+                if (validateCardId(value)) {
+                    input.classList.add('valid');
+                } else {
+                    input.classList.add('invalid');
+                }
+            }
+        });
+
+        // 支持回车键查询
+        document.getElementById('cardIdInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fetchCardInfo();
+            }
+        });
+
+        // 页面加载时检查URL参数，支持 ?test=1 启用测试模式
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('test') === '1') {
+                showTestMode();
+            }
+        });
+    </script>
+</body>
+</html>
+
