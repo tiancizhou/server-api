@@ -58,12 +58,13 @@ echo Start time: %date% %time% >> "%NODE_LOG%"
 echo ========================================== >> "%NODE_LOG%"
 echo. >> "%NODE_LOG%"
 
-:: Check natapp
+:: Check natapp (prioritize project directory)
 echo [4/5] Checking natapp.exe...
 set NATAPP_PATH=
+if exist "%~dp0natapp\natapp.exe" set NATAPP_PATH=%~dp0natapp\natapp.exe
+if exist "%~dp0natapp.exe" set NATAPP_PATH=%~dp0natapp.exe
 if exist "C:\tools\natapp\natapp.exe" set NATAPP_PATH=C:\tools\natapp\natapp.exe
 if exist "C:\Tools\natapp.exe" set NATAPP_PATH=C:\Tools\natapp.exe
-if exist "%~dp0natapp.exe" set NATAPP_PATH=%~dp0natapp.exe
 
 if "%NATAPP_PATH%"=="" (
     echo [!] natapp.exe not found, starting local server only

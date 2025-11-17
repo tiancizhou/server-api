@@ -65,7 +65,10 @@ npm start
 启动服务后，使用内网穿透工具将服务暴露到公网：
 
 ```bash
-# natapp（推荐，已集成）
+# natapp（推荐，已集成在项目中）
+.\natapp\natapp.exe
+
+# 或使用其他路径的 natapp
 C:\Tools\natapp.exe
 
 # ngrok 示例
@@ -74,6 +77,11 @@ ngrok http 5200
 # frp 示例
 frpc -c frpc.ini
 ```
+
+**注意**：
+- natapp 已包含在项目的 `natapp\` 目录中
+- 启动脚本会自动查找并使用项目目录下的 natapp.exe
+- 如果项目目录中没有 natapp，脚本会尝试在系统常见路径中查找
 
 ## API 接口
 

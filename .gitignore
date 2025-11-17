@@ -7,3 +7,8 @@ npm-debug.log
 logs/
 *.log
 
+# natapp 配置和可执行文件
+natapp/config.ini
+natapp/*.exe
+natapp/*.log
+

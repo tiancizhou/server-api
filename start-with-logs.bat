@@ -52,12 +52,13 @@ set NODE_LOG=%~dp0logs\node-%LOG_DATE%.log
 echo 日志文件: logs\node-%LOG_DATE%.log
 echo.
 
-:: 检查 natapp
+:: 检查 natapp（优先使用项目目录）
 echo [4/4] 检查 natapp.exe...
 set NATAPP_PATH=
+if exist "%~dp0natapp\natapp.exe" set NATAPP_PATH=%~dp0natapp\natapp.exe
+if exist "%~dp0natapp.exe" set NATAPP_PATH=%~dp0natapp.exe
 if exist "C:\tools\natapp\natapp.exe" set NATAPP_PATH=C:\tools\natapp\natapp.exe
 if exist "C:\Tools\natapp.exe" set NATAPP_PATH=C:\Tools\natapp.exe
-if exist "%~dp0natapp.exe" set NATAPP_PATH=%~dp0natapp.exe
 
 if "%NATAPP_PATH%"=="" (
     echo [!] 未找到 natapp.exe

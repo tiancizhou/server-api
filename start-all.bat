@@ -38,11 +38,12 @@ if not exist "node_modules" (
 :: 检查 natapp
 echo [3/4] 检查 natapp.exe...
 
-:: 尝试多个可能的路径
+:: 尝试多个可能的路径（优先使用项目目录）
 set NATAPP_PATH=
+if exist "%~dp0natapp\natapp.exe" set NATAPP_PATH=%~dp0natapp\natapp.exe
+if exist "%~dp0natapp.exe" set NATAPP_PATH=%~dp0natapp.exe
 if exist "C:\tools\natapp\natapp.exe" set NATAPP_PATH=C:\tools\natapp\natapp.exe
 if exist "C:\Tools\natapp.exe" set NATAPP_PATH=C:\Tools\natapp.exe
-if exist "%~dp0natapp.exe" set NATAPP_PATH=%~dp0natapp.exe
 if exist "%USERPROFILE%\Desktop\natapp.exe" set NATAPP_PATH=%USERPROFILE%\Desktop\natapp.exe
 if exist "%USERPROFILE%\Downloads\natapp.exe" set NATAPP_PATH=%USERPROFILE%\Downloads\natapp.exe
 
@@ -50,9 +51,10 @@ if "%NATAPP_PATH%"=="" (
     echo [X] 警告：未找到 natapp.exe
     echo.
     echo 已尝试查找以下位置：
+    echo   - 项目目录\natapp\natapp.exe
+    echo   - 项目目录\natapp.exe
     echo   - C:\tools\natapp\natapp.exe
     echo   - C:\Tools\natapp.exe
-    echo   - 项目目录\natapp.exe
     echo   - 桌面\natapp.exe
     echo   - 下载文件夹\natapp.exe
     echo.
