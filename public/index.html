@@ -525,6 +525,193 @@
             position: relative;
             z-index: 1;
         }
+
+        /* 交易记录弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .card-info-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .transactions-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+
+        .transaction-item {
+            background: #f9fafb;
+            border-left: 4px solid #e5e7eb;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .transaction-item.failed {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .transaction-item.success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .transaction-amount {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .transaction-amount.negative {
+            color: #ef4444;
+        }
+
+        .transaction-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .transaction-status.失败 {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .transaction-status.成功 {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .transaction-details {
+            font-size: 14px;
+            color: #4b5563;
+            margin-top: 8px;
+        }
+
+        .transaction-details div {
+            margin-bottom: 5px;
+        }
+
+        .failure-reason {
+            color: #dc2626;
+            font-weight: 500;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 6px;
+        }
+
+        .no-transactions {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
@@ -559,6 +746,13 @@
     <div class="container">
         <h1 ondblclick="showTestMode()" style="user-select: none;">激活卡片 & 交易记录查询</h1>
         
+        <!-- 使用说明链接 -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/guide" target="_blank" style="color: white; text-decoration: none; background: rgba(255, 255, 255, 0.2); padding: 10px 20px; border-radius: 8px; display: inline-block; transition: all 0.3s;">
+                📖 查看使用说明
+            </a>
+        </div>
+        
         <div class="card">
             <!-- 测试模式开关 - 隐藏状态，双击标题显示 -->
             <div id="testModePanel" style="margin-bottom: 15px; padding: 10px; background: #f3f4f6; border-radius: 8px; display: none; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -577,12 +771,12 @@
                     <input 
                         type="text" 
                         id="cardIdInput" 
-                        placeholder="请输入卡密 (支持 mio-xxx... 或 8-20位纯数字)"
-                        maxlength="40"
+                        placeholder="请输入卡密或卡号 (卡密: mio-xxx... | 卡号: 纯数字)"
+                        maxlength="50"
                     >
                 </div>
                 <button class="btn btn-primary" id="fetchBtn" onclick="fetchCardInfo()">
-                    获取卡信息
+                    查询
                 </button>
             </div>
 
@@ -618,7 +812,6 @@
                         <div class="info-value large">
                             <span id="cardNumber"></span>
                             <button class="copy-btn" onclick="copyToClipboard('cardNumber', event)" title="复制">📋</button>
-                            <button class="query-btn" onclick="alert('查询功能开发中')">🔍 查询</button>
                         </div>
                     </div>
 
@@ -653,6 +846,19 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 交易记录弹窗 -->
+    <div id="transactionModal" class="modal" onclick="if(event.target.id === 'transactionModal') closeTransactionModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">📊 卡片信息和交易记录</div>
+                <button class="modal-close" onclick="closeTransactionModal()">×</button>
+            </div>
+            <div id="modalBody">
+                <div class="loading">加载中...</div>
             </div>
         </div>
     </div>
@@ -719,46 +925,59 @@
             }
         }
 
-        // 验证卡密格式
-        function validateCardId(cardId) {
-            // 格式1：mio- 开头 + UUID格式 (mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
-            // 固定长度：40位（mio- 4位 + UUID 36位）
-            const mioPattern = /^mio-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        // 判断输入是卡密还是卡号
+        function detectInputType(input) {
+            input = input.trim();
             
-            // 格式2：纯数字格式（8-20位数字）
-            const numericPattern = /^\d{8,20}$/;
+            // 卡密格式：mio- 开头 + UUID格式
+            const cardIdPattern = /^mio-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             
-            return mioPattern.test(cardId) || numericPattern.test(cardId);
+            // 卡号格式：纯数字（8位以上）
+            const cardNumberPattern = /^\d{8,}$/;
+            
+            if (cardIdPattern.test(input)) {
+                return { type: 'cardId', value: input };
+            } else if (cardNumberPattern.test(input)) {
+                return { type: 'cardNumber', value: input.replace(/\s+/g, '') };
+            }
+            
+            return { type: 'invalid', value: input };
+        }
+        
+        // 验证输入格式
+        function validateInput(input) {
+            const result = detectInputType(input);
+            return result.type !== 'invalid';
         }
         
         // 获取详细的验证错误信息
-        function getValidationError(cardId) {
-            if (!cardId) {
-                return '请输入卡密';
+        function getValidationError(input) {
+            if (!input || !input.trim()) {
+                return '请输入卡密或卡号';
             }
             
-            // 检查是否是纯数字
-            if (/^\d+$/.test(cardId)) {
-                if (cardId.length < 8) {
-                    return `纯数字格式至少需要8位，当前只有 ${cardId.length} 位`;
-                } else if (cardId.length > 20) {
-                    return `纯数字格式最多20位，当前有 ${cardId.length} 位`;
-                }
+            const result = detectInputType(input);
+            
+            if (result.type === 'cardId') {
+                return null; // 格式正确
+            } else if (result.type === 'cardNumber') {
+                return null; // 格式正确
             }
             
-            // 检查是否以 mio- 开头
-            if (cardId.toLowerCase().startsWith('mio-')) {
-                if (cardId.length !== 40) {
-                    return `mio-UUID 格式应为40位，当前为 ${cardId.length} 位`;
-                }
-                return 'mio-UUID 格式不正确，请检查格式';
+            // 格式错误
+            if (input.toLowerCase().startsWith('mio-')) {
+                return `卡密格式不正确，应为40位，当前为 ${input.length} 位<br>请检查是否完整复制卡密`;
             }
             
-            return '卡密格式不正确！<br>支持的格式：<br>• mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx<br>• 8-20位纯数字（如：5236860109371684）';
+            if (/^\d+$/.test(input)) {
+                return `卡号格式不正确，至少需要8位数字，当前为 ${input.length} 位`;
+            }
+            
+            return '格式不正确！<br>• 卡密格式：mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx<br>• 卡号格式：8位以上纯数字<br>请检查输入是否正确';
         }
 
         async function fetchCardInfo() {
-            const cardId = document.getElementById('cardIdInput').value.trim();
+            const input = document.getElementById('cardIdInput').value.trim();
             const fetchBtn = document.getElementById('fetchBtn');
             const errorMessage = document.getElementById('errorMessage');
             const successMessage = document.getElementById('successMessage');
@@ -771,57 +990,104 @@
             infoSection.classList.remove('show');
             activatePrompt.classList.remove('show');
 
-            // 验证卡密格式
-            if (!validateCardId(cardId)) {
-                showError(getValidationError(cardId));
+            // 验证输入格式
+            const errorMsg = getValidationError(input);
+            if (errorMsg) {
+                showError(errorMsg);
                 return;
             }
 
+            // 判断输入类型
+            const inputType = detectInputType(input);
+            
             // 显示加载状态
             fetchBtn.disabled = true;
-            fetchBtn.innerHTML = '<span class="spinner"></span> 加载中...';
+            fetchBtn.innerHTML = '<span class="spinner"></span> 查询中...';
 
             try {
-                let data;
-                
-                // 测试模式：使用模拟数据
-                if (isTestMode) {
-                    await new Promise(resolve => setTimeout(resolve, 500)); // 模拟网络延迟
-                    const testStatus = document.getElementById('testStatusSelect').value;
-                    data = {
-                        result: getMockData(testStatus),
-                        msg: '测试模式：模拟数据获取成功'
-                    };
-                } else {
-                    // 真实模式：调用API
-                    const response = await fetch(`/api/card/${cardId}`);
-                    data = await response.json();
+                if (inputType.type === 'cardId') {
+                    // 查询卡密信息（激活状态、卡号等）
+                    await queryCardById(inputType.value);
+                } else if (inputType.type === 'cardNumber') {
+                    // 查询卡号交易记录
+                    await queryCardByNumber(inputType.value);
                 }
-
-                if (!data.result) {
-                    showError(data.msg || '获取卡片信息失败');
-                    return;
-                }
-
-                currentCardData = data.result;
-
-                // 判断是否需要激活
-                if (data.result.status === '未激活') {
-                    // 显示激活提示
-                    showSuccess('⚠️ 卡片信息获取成功，但该卡片尚未激活');
-                    activatePrompt.classList.add('show');
-                } else {
-                    showSuccess('✅ 卡片信息获取成功！');
-                }
-
-                // 显示卡片信息
-                displayCardInfo(currentCardData);
-
             } catch (error) {
                 showError('网络错误：' + error.message);
             } finally {
                 fetchBtn.disabled = false;
-                fetchBtn.innerHTML = '获取卡信息';
+                fetchBtn.innerHTML = '查询';
+            }
+        }
+        
+        // 通过卡密查询卡片信息
+        async function queryCardById(cardId) {
+            let data;
+            
+            // 测试模式：使用模拟数据
+            if (isTestMode) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const testStatus = document.getElementById('testStatusSelect').value;
+                data = {
+                    result: getMockData(testStatus),
+                    msg: '测试模式：模拟数据获取成功'
+                };
+            } else {
+                // 真实模式：调用API
+                const response = await fetch(`/api/card/${cardId}`);
+                data = await response.json();
+            }
+
+            if (!data.result) {
+                showError(data.msg || '获取卡片信息失败');
+                return;
+            }
+
+            currentCardData = data.result;
+
+            // 判断是否需要激活
+            if (data.result.status === '未激活') {
+                showSuccess('⚠️ 卡片信息获取成功，但该卡片尚未激活');
+                activatePrompt.classList.add('show');
+            } else {
+                showSuccess('✅ 卡片信息获取成功！');
+            }
+
+            // 显示卡片信息
+            displayCardInfo(currentCardData);
+        }
+        
+        // 通过卡号查询交易记录
+        async function queryCardByNumber(cardNumber) {
+            // 显示弹窗
+            const modal = document.getElementById('transactionModal');
+            const modalBody = document.getElementById('modalBody');
+            modal.classList.add('show');
+            modalBody.innerHTML = '<div class="loading">正在查询交易记录...</div>';
+            
+            try {
+                const response = await fetch(`/api/card/info/${cardNumber}`);
+                const data = await response.json();
+                
+                if (!data.result) {
+                    modalBody.innerHTML = `
+                        <div class="error-message show">
+                            ${data.msg || data.error || '查询失败，请检查卡号是否正确'}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 渲染卡片信息和交易记录
+                renderCardInfo(data.result);
+                showSuccess('✅ 交易记录查询成功！');
+                
+            } catch (error) {
+                modalBody.innerHTML = `
+                    <div class="error-message show">
+                        网络错误：${error.message}
+                    </div>
+                `;
             }
         }
 
@@ -994,7 +1260,7 @@
             }
         }
 
-        // 实时验证卡密格式
+        // 实时验证输入格式
         document.getElementById('cardIdInput').addEventListener('input', function(e) {
             const input = e.target;
             const value = input.value.trim();
@@ -1004,7 +1270,7 @@
             
             // 如果有内容，进行验证
             if (value) {
-                if (validateCardId(value)) {
+                if (validateInput(value)) {
                     input.classList.add('valid');
                 } else {
                     input.classList.add('invalid');
@@ -1019,6 +1285,106 @@
             }
         });
 
+        // 渲染卡片信息和交易记录
+        function renderCardInfo(cardInfo) {
+            const modalBody = document.getElementById('modalBody');
+            
+            let html = `
+                <div class="card-info-summary">
+                    <div class="summary-item">
+                        <div class="summary-label">卡片状态</div>
+                        <div class="summary-value">${cardInfo.status || '-'}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">已使用</div>
+                        <div class="summary-value">$${Math.abs(cardInfo.posted || 0)}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">待处理</div>
+                        <div class="summary-value">$${Math.abs(cardInfo.pending || 0)}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">可用余额</div>
+                        <div class="summary-value">$${Math.abs(cardInfo.available || 0)}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">不可用</div>
+                        <div class="summary-value">$${Math.abs(cardInfo.unavailable || 0)}</div>
+                    </div>
+                </div>
+            `;
+            
+            if (cardInfo.transactions && cardInfo.transactions.length > 0) {
+                html += `<div class="transactions-title">交易记录 (${cardInfo.transactions.length} 条)</div>`;
+                
+                cardInfo.transactions.forEach(transaction => {
+                    const isFailed = transaction.status === '失败';
+                    const itemClass = isFailed ? 'failed' : (transaction.status === '成功' ? 'success' : '');
+                    
+                    html += `
+                        <div class="transaction-item ${itemClass}">
+                            <div class="transaction-header">
+                                <div class="transaction-amount ${transaction.amount < 0 ? 'negative' : ''}">
+                                    ${transaction.amount > 0 ? '+' : ''}$${Math.abs(transaction.amount)}
+                                </div>
+                                <span class="transaction-status ${transaction.status}">${transaction.status}</span>
+                            </div>
+                            <div class="transaction-details">
+                                <div><strong>商户：</strong>${transaction.bank_description || '-'}</div>
+                                <div><strong>类型：</strong>${transaction.kind || '-'}</div>
+                                <div><strong>时间：</strong>${transaction.created_at || '-'}</div>
+                                ${isFailed && transaction.reason_for_failure ? `
+                                    <div class="failure-reason">
+                                        <strong>失败原因：</strong>${formatFailureReason(transaction.reason_for_failure)}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                    <div class="no-transactions">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📭</div>
+                        <div>暂无交易记录</div>
+                    </div>
+                `;
+            }
+            
+            modalBody.innerHTML = html;
+        }
+        
+        // 格式化失败原因，强调环境问题
+        function formatFailureReason(reason) {
+            if (!reason) return '';
+            
+            // 将技术性错误原因转换为更友好的环境问题说明
+            let friendlyReason = reason;
+            
+            // 如果是 CVC 或有效期错误，暗示可能是环境问题
+            if (reason.includes('CVC') || reason.includes('expiration date')) {
+                friendlyReason = '可能是由于网络环境或IP节点问题导致的信息验证失败。建议：<br>' +
+                    '• 检查网络连接是否稳定<br>' +
+                    '• 尝试更换网络环境或使用VPN<br>' +
+                    '• 确认信息填写完全正确后重试';
+            } else if (reason.includes('spend limit') || reason.includes('exceeded')) {
+                friendlyReason = '可能是由于当前网络环境或IP节点被限制。建议：<br>' +
+                    '• 检查当前IP地址是否正常<br>' +
+                    '• 尝试更换网络环境<br>' +
+                    '• 稍后再试';
+            } else {
+                // 其他错误，也暗示环境问题
+                friendlyReason = reason + '<br><br><strong>提示：</strong>绑卡失败通常与网络环境、IP节点或操作时机有关。建议检查网络连接，尝试更换网络环境后重试。';
+            }
+            
+            return friendlyReason;
+        }
+        
+        // 关闭弹窗
+        function closeTransactionModal() {
+            document.getElementById('transactionModal').classList.remove('show');
+        }
+        
         // 页面加载时检查URL参数，支持 ?test=1 启用测试模式
         window.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);

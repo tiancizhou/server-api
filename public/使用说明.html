@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片激活使用说明</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
+                         'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+
+        .step {
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .step-content {
+            color: #4b5563;
+            margin-left: 38px;
+        }
+
+        .step-content ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .step-content li {
+            margin-bottom: 8px;
+        }
+
+        .highlight-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .highlight-box-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .highlight-box-content {
+            color: #78350f;
+            line-height: 1.8;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+
+        .info-box-content {
+            color: #1e3a8a;
+        }
+
+        .address-box {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .address-line {
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .warning-box {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+
+        .warning-box-title {
+            font-weight: 600;
+            color: #991b1b;
+            margin-bottom: 5px;
+        }
+
+        .warning-box-content {
+            color: #7f1d1d;
+        }
+
+        .image-placeholder {
+            background: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: #6b7280;
+            margin: 20px 0;
+        }
+
+        .format-example {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .step-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 卡片激活使用说明</h1>
+            <p>简单几步，轻松激活您的虚拟卡片</p>
+        </div>
+
+        <div class="card">
+            <!-- 重要提示 -->
+            <div class="highlight-box">
+                <div class="highlight-box-title">
+                    ⚠️ 重要提示
+                </div>
+                <div class="highlight-box-content">
+                    <strong>卡密兑换地址：</strong><br>
+                    <a href="http://qqlovecc.natapp1.cc" target="_blank" style="color: #92400e; text-decoration: underline;">http://qqlovecc.natapp1.cc</a>
+                </div>
+            </div>
+
+            <!-- 第一步：访问网站 -->
+            <div class="section">
+                <div class="section-title">第一步：访问激活网站</div>
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        打开浏览器
+                    </div>
+                    <div class="step-content">
+                        在浏览器地址栏输入或点击以下地址：
+                        <div class="info-box" style="margin-top: 10px;">
+                            <div class="info-box-content">
+                                <strong>http://qqlovecc.natapp1.cc</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第二步：输入卡密并查询状态 -->
+            <div class="section">
+                <div class="section-title">第二步：输入卡密并查询激活状态</div>
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        输入卡密查询状态
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>在输入框中粘贴或输入您收到的<strong>卡密</strong>（格式：mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）</li>
+                            <li>或者输入<strong>卡号</strong>（纯数字）来查询交易记录</li>
+                            <li>系统会自动识别输入类型：
+                                <ul style="margin-top: 10px; margin-left: 20px;">
+                                    <li>输入<strong>卡密</strong> → 查询卡片激活状态和卡号信息</li>
+                                    <li>输入<strong>卡号</strong> → 查询交易记录和失败原因</li>
+                                </ul>
+                            </li>
+                            <li>点击"查询"按钮</li>
+                            <li>系统会显示相应的信息</li>
+                        </ul>
+                        <div class="info-box" style="margin-top: 15px;">
+                            <div class="info-box-title">💡 重要提示</div>
+                            <div class="info-box-content">
+                                <strong>只有激活后的卡片才能看到卡号、有效期、CVC等信息。</strong><br>
+                                如果显示"未激活"，请先完成激活步骤。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第三步：激活卡片 -->
+            <div class="section">
+                <div class="section-title">第三步：激活卡片</div>
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        点击激活按钮
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>如果卡片显示"未激活"状态，系统会提示您激活</li>
+                            <li>点击"立即激活"按钮</li>
+                            <li>等待激活完成（通常几秒钟）</li>
+                            <li><strong>激活成功后，才会显示完整的卡片信息（卡号、有效期、CVC等）</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第四步：获取并填充卡片信息 -->
+            <div class="section">
+                <div class="section-title">第四步：获取并填充卡片信息</div>
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        查看并复制卡片信息
+                    </div>
+                    <div class="step-content">
+                        <p style="margin-bottom: 10px;"><strong>激活成功后</strong>，您将看到以下信息：</p>
+                        <ul>
+                            <li><strong>卡号：</strong>16位卡号（已格式化显示）</li>
+                            <li><strong>有效期：</strong>MM/YYYY 格式</li>
+                            <li><strong>CVC：</strong>3位安全码</li>
+                            <li><strong>账单地址：</strong>131 Lupine Drive, Torrington, WY 82240</li>
+                        </ul>
+                        <div class="info-box" style="margin-top: 15px;">
+                            <div class="info-box-title">📋 快速复制</div>
+                            <div class="info-box-content">
+                                点击每项信息旁边的 📋 图标，可以快速复制到剪贴板，然后粘贴到支付页面
+                            </div>
+                        </div>
+                        <div class="warning-box" style="margin-top: 15px; background: #fef3c7; border-left-color: #f59e0b;">
+                            <div class="warning-box-title" style="color: #92400e;">
+                                🚨 重要：激活 Cursor 的界面要求
+                            </div>
+                            <div class="warning-box-content" style="color: #78350f;">
+                                <strong>在 Cursor 支付页面绑卡前，请务必确认：</strong>
+                                <ul style="margin-top: 10px; margin-left: 20px;">
+                                    <li><strong>左侧必须显示"7天免费"（7天免费）字样</strong></li>
+                                    <li>界面应该显示"试用 Cursor Pro"和"7天免费"的提示</li>
+                                    <li>只有看到"7天免费"说明的界面才能绑卡</li>
+                                    <li><strong>如果界面没有显示"7天免费"，请不要绑卡，请检查是否进入了正确的激活页面</strong></li>
+                                </ul>
+                                <div style="margin-top: 15px; padding: 10px; background: rgba(255, 255, 255, 0.5); border-radius: 5px;">
+                                    <strong>正确界面特征：</strong><br>
+                                    • 左侧显示"试用 Cursor Pro"<br>
+                                    • 左侧显示"7天免费"（7天免费）<br>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="highlight-box" style="margin-top: 15px;">
+                            <div class="highlight-box-title">
+                                ⚠️ 重要提醒：关于持卡人姓名
+                            </div>
+                            <div class="highlight-box-content">
+                                <strong>卡片没有预设姓名，需要您自己填写！</strong><br>
+                                在支付页面填写卡片信息时，请在"持卡人姓名"（Cardholder Name）字段中：
+                                <ul style="margin-top: 10px; margin-left: 20px;">
+                                    <li>输入一个<strong>英文姓名</strong>（例如：John Smith、Mary Johnson）</li>
+                                    <li>可以使用任意英文名，无需与真实姓名一致</li>
+                                    <li>格式：First Name + Last Name（名 + 姓）</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 注意事项 -->
+            <div class="section">
+                <div class="section-title">⚠️ 注意事项</div>
+                <div class="warning-box">
+                    <div class="warning-box-title">重要提醒</div>
+                    <div class="warning-box-content">
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>卡密只能激活一次，请妥善保管</li>
+                            <li>激活后请立即保存卡片信息（卡号、有效期、CVC）</li>
+                            <li><strong>卡片没有预设姓名，使用时需要自己输入一个英文名</strong></li>
+                            <li><strong>在 Cursor 绑卡前，必须确认左侧显示"7天免费"字样，否则不要绑卡</strong></li>
+                            <li>激活后一小时有效，请及时使用</li>
+                            <li>如绑卡失败，可在搜索框输入卡号查询失败原因，通常与网络环境、IP节点有关</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 常见问题 -->
+            <div class="section">
+                <div class="section-title">❓ 常见问题</div>
+                
+                <div class="step" style="background: white; border-left-color: #10b981;">
+                    <div class="step-title" style="color: #059669;">
+                        Q1: 输入卡密后提示"格式不正确"？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 请检查输入格式是否正确：
+                        <ul>
+                            <li><strong>卡密格式：</strong>mio- 开头的 UUID 格式（40位，例如：mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）</li>
+                            <li><strong>卡号格式：</strong>8位以上纯数字（用于查询交易记录）</li>
+                        </ul>
+                        确保没有多余的空格或字符。如果输入的是卡号，系统会查询交易记录；如果输入的是卡密，系统会查询激活状态。
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #10b981;">
+                    <div class="step-title" style="color: #059669;">
+                        Q2: 激活失败怎么办？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 
+                        <ul>
+                            <li>检查网络连接是否正常</li>
+                            <li>确认卡密未被使用过（卡密只能激活一次）</li>
+                            <li>确认卡密格式正确，没有多余空格</li>
+                            <li>稍后重试，如仍失败请检查卡密是否正确</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #10b981;">
+                    <div class="step-title" style="color: #059669;">
+                        Q3: 如何复制卡片信息？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 点击每项信息旁边的 📋 图标即可复制。如果复制失败，可以手动选中文本复制。
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #10b981;">
+                    <div class="step-title" style="color: #059669;">
+                        Q4: 为什么看不到卡号等信息？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 只有激活后的卡片才能显示卡号、有效期、CVC等信息。如果看不到，说明卡片还未激活，请先点击"立即激活"按钮完成激活。
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #10b981;">
+                    <div class="step-title" style="color: #059669;">
+                        Q5: 持卡人姓名怎么填写？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 卡片没有预设姓名，需要您自己填写。在支付页面的"持卡人姓名"字段中，输入任意英文姓名即可（例如：John Smith、Mary Johnson）。可以使用任意英文名，无需与真实姓名一致。
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #f59e0b;">
+                    <div class="step-title" style="color: #92400e;">
+                        Q6: 在 Cursor 绑卡时需要注意什么？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> <strong>非常重要！</strong>在 Cursor 支付页面绑卡前，必须确认：
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li><strong>左侧必须显示"7天免费"（7天免费）字样</strong></li>
+                            <li>界面应该显示"试用 Cursor Pro"和"7天免费"的提示</li>
+                            <li>只有看到"7天免费"说明的界面才能绑卡</li>
+                            <li><strong>如果界面没有显示"7天免费"，请不要绑卡，请检查是否进入了正确的激活页面</strong></li>
+                        </ul>
+                        这是确保您能享受7天免费试用的关键步骤！
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #ef4444;">
+                    <div class="step-title" style="color: #dc2626;">
+                        Q7: 绑卡多次被拒怎么办？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 绑卡被拒通常与<strong>网络环境、IP节点或操作时机</strong>有关，请按以下步骤检查：
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li><strong>查看失败原因：</strong>在搜索框输入卡号，点击"查询"按钮，查看交易记录中的失败原因</li>
+                            <li><strong>检查网络环境：</strong>确认网络连接稳定，尝试更换网络或使用VPN</li>
+                            <li><strong>检查IP节点：</strong>当前IP可能被限制，建议更换网络环境后重试</li>
+                            <li><strong>检查信息填写：</strong>确认卡号、有效期、CVC、姓名、账单地址都正确填写</li>
+                            <li><strong>检查操作时机：</strong>避免在网络不稳定时操作，建议在网络良好时重试</li>
+                            <li><strong>检查界面：</strong>确认在显示"7天免费"的正确界面绑卡</li>
+                        </ul>
+                        <div style="margin-top: 15px; padding: 12px; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 6px;">
+                            <strong>重要提示：</strong>绑卡失败通常与<strong>网络环境、IP节点或操作时机</strong>有关。建议检查网络连接，尝试更换网络环境（如使用VPN或更换WiFi），确认信息填写正确后重试。多次失败后，可通过输入卡号查询具体的失败原因。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 开始使用按钮 -->
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="/" class="btn">🚀 立即前往激活</a>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: white; margin-top: 30px; opacity: 0.8;">
+            <p>请仔细阅读说明，按照步骤正确操作</p>
+        </div>
+    </div>
+</body>
+</html>
+

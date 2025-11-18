@@ -11,3 +11,7 @@ logs/
 natapp/config.ini
 natapp/*.log
 
+# 卡密数据文件（敏感信息，不提交）
+data/
+*.json
+

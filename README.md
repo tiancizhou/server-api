@@ -4,6 +4,7 @@
 
 ## 功能特点
 
+### 用户端
 - 🔍 查询卡片信息
 - ✅ 用户确认后激活卡片
 - 📋 一键复制卡片信息（支持 HTTP/HTTPS）
@@ -11,6 +12,15 @@
 - 🚀 快速部署，支持内网穿透
 - 🧪 内置测试模式（无需真实卡片）
 - ✅ 智能格式验证（防止无效请求）
+
+### 管理后台（新增）
+- 📦 卡密批量导入（智能识别多种格式）
+- 📋 一键取卡并复制（闲鱼发货专用）
+- 📊 库存实时统计（可用/已售/已用）
+- 🔄 自动标记已使用（用户激活后自动更新）
+- 🗑️ 批量清理已使用卡密
+- 🔐 密码保护（防止未授权访问）
+- 💾 本地存储（JSON文件，无需数据库）
 
 ## 快速开始
 
@@ -129,21 +139,77 @@ frpc -c frpc.ini
 
 ## API 接口
 
-### 获取卡片信息
+### 用户端 API
+
+#### 获取卡片信息
 
 ```
 GET /api/card/:cardId
 ```
 
-### 激活卡片
+#### 激活卡片
 
 ```
 POST /api/card/activate/:cardId
 ```
 
+### 管理后台 API
+
+所有管理后台 API 需要在请求头中添加密码认证：
+```
+x-admin-password: your_password
+```
+
+#### 获取统计信息
+
+```
+GET /api/admin/stats
+```
+
+#### 获取卡密列表
+
+```
+GET /api/admin/cards?filter=all
+# filter: all, available, sold, used
+```
+
+#### 批量导入卡密
+
+```
+POST /api/admin/cards/import
+Content-Type: application/json
+
+{
+  "cards": ["mio-xxx", "mio-yyy"]
+}
+```
+
+#### 获取下一个可用卡密
+
+```
+POST /api/admin/cards/get-next
+```
+
+#### 标记卡密为已售出
+
+```
+POST /api/admin/cards/mark-sold/:cardId
+Content-Type: application/json
+
+{
+  "buyer": "买家信息（可选）"
+}
+```
+
+#### 清理已使用的卡密
+
+```
+POST /api/admin/cards/cleanup
+```
+
 ## 使用说明
 
-### 基本操作
+### 用户端使用（前台页面）
 
 1. 在输入框中输入卡密（支持两种格式）：
    - UUID 格式：`mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
@@ -154,6 +220,49 @@ POST /api/card/activate/:cardId
 5. 用户确认后点击"立即激活"按钮
 6. 激活成功后显示完整的卡片信息
 7. 可以点击📋图标快速复制各项信息
+
+### 管理后台使用（闲鱼发货）⭐ 新功能
+
+**访问地址**：`http://localhost:5200/admin` 或通过内网穿透后的域名
+
+#### 1. 登录后台
+- 默认密码：`admin123`
+- 可通过环境变量 `ADMIN_PASSWORD` 修改密码
+
+#### 2. 批量导入卡密
+1. 打开你从卡渠道下载的卡密文件（txt格式）
+2. 全选并复制所有内容（支持智能识别格式）：
+   ```
+   卡密: mio-xxx 额度: 0 有效期: 1小时
+   卡密: mio-yyy 额度: 0 有效期: 1小时
+   ```
+3. 粘贴到"批量导入卡密"文本框
+4. 点击"导入卡密"按钮
+5. 系统会自动去重并显示导入结果
+
+**支持的格式**：
+- `卡密: mio-xxx 额度: 0 有效期: 1小时`（自动提取）
+- `mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`（纯卡密）
+- `8-20位纯数字`
+
+#### 3. 闲鱼发货流程（重点）⚡
+1. 买家下单后，打开管理后台
+2. 点击"📋 获取下一个卡密并复制"按钮
+3. 卡密自动复制到剪贴板
+4. 粘贴到闲鱼对话框发送给买家
+5. 发送后点击"✓ 已发货，标记为已售出"按钮
+6. 系统自动更新库存，防止重复发货
+
+**优势**：
+- ✅ 一键复制，无需手动查找卡密
+- ✅ 自动标记，防止重复发货
+- ✅ 买家激活后自动标记为"已使用"
+- ✅ 实时库存统计，低库存预警
+
+#### 4. 库存管理
+- **统计卡片**：顶部显示总数、可用、已售、已用数量
+- **筛选查看**：点击按钮筛选不同状态的卡密
+- **清理数据**：点击"🗑️ 清理已使用"批量删除已用卡密
 
 ### 日志功能
 
@@ -184,9 +293,40 @@ view-logs.bat
 - 前端：原生 HTML + CSS + JavaScript
 - HTTP 客户端：Axios
 
+## 配置说明
+
+### 修改管理后台密码
+
+**方法一：环境变量**（推荐）
+```bash
+# Windows PowerShell
+$env:ADMIN_PASSWORD="your_strong_password"
+npm start
+
+# Windows CMD
+set ADMIN_PASSWORD=your_strong_password
+npm start
+```
+
+**方法二：直接修改 server.js**
+```javascript
+const ADMIN_PASSWORD = 'your_strong_password';
+```
+
+### 数据存储
+
+- 卡密数据存储在 `data/cards.json` 文件中
+- 文件会自动创建，无需手动配置
+- 建议定期备份 `data/` 目录
+- 数据文件已添加到 `.gitignore`，不会被提交到 Git
+
 ## 注意事项
 
-- 确保网络能够访问 https://misacard.com
-- 服务默认运行在 5200 端口
-- 使用内网穿透时注意安全性
+- ⚠️ 确保网络能够访问 https://misacard.com
+- ⚠️ 服务默认运行在 5200 端口
+- ⚠️ 使用内网穿透时注意安全性
+- 🔐 **重要**：修改默认管理密码，防止未授权访问
+- 💾 定期备份 `data/cards.json` 文件
+- 🗑️ 定期清理已使用的卡密，释放存储空间
+- 📊 建议保持可用库存数量 > 10，避免缺货
 
