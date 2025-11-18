@@ -420,6 +420,101 @@
             color: #9ca3af;
         }
 
+        /* 移动端复制弹窗 */
+        .mobile-copy-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .mobile-copy-modal.show {
+            display: flex;
+        }
+
+        .mobile-copy-content {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-copy-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .mobile-copy-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            background: #fff;
+            user-select: all;
+            -webkit-user-select: all;
+            -moz-user-select: all;
+            -ms-user-select: all;
+            word-break: break-all;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .mobile-copy-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .mobile-copy-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mobile-copy-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mobile-copy-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .mobile-copy-btn.primary:hover {
+            background: #5568d3;
+        }
+
+        .mobile-copy-btn.secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .mobile-copy-btn.secondary:hover {
+            background: #d1d5db;
+        }
+
         /* 响应式 */
         @media (max-width: 768px) {
             h1 {
@@ -596,6 +691,21 @@
         </div>
     </div>
 
+    <!-- 移动端复制弹窗 -->
+    <div id="mobileCopyModal" class="mobile-copy-modal">
+        <div class="mobile-copy-content">
+            <div class="mobile-copy-title">📋 点击下方文本框选择复制</div>
+            <textarea id="mobileCopyInput" class="mobile-copy-input"></textarea>
+            <div style="font-size: 13px; color: #6b7280; margin-bottom: 15px; text-align: center;">
+                💡 提示：长按文本框可以复制，或点击"全选并复制"按钮
+            </div>
+            <div class="mobile-copy-buttons">
+                <button class="mobile-copy-btn secondary" onclick="closeMobileCopyModal()">关闭</button>
+                <button class="mobile-copy-btn primary" onclick="selectMobileCopyText()">全选并复制</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let adminPassword = '';
         let currentCard = null;
@@ -693,8 +803,9 @@
                     
                     // 复制完整信息（包含激活地址和提示）
                     const fullMessage = generateCardMessage(data.card.cardId);
-                    copyToClipboard(fullMessage);
-                    showMessage('quickMessage', '✅ 卡密和激活信息已复制到剪贴板！发送给买家后记得点击"已发货"按钮', 'success');
+                    copyToClipboard(fullMessage, () => {
+                        showMessage('quickMessage', '✅ 卡密和激活信息已复制到剪贴板！发送给买家后记得点击"已发货"按钮', 'success');
+                    });
                 } else {
                     showMessage('quickMessage', data.message, 'error');
                 }
@@ -931,11 +1042,12 @@
 
         // 复制卡密
         function copyCardId(cardId) {
-            copyToClipboard(cardId);
-            showMessage('listMessage', '✅ 已复制: ' + cardId, 'success');
-            setTimeout(() => {
-                document.getElementById('listMessage').classList.remove('show');
-            }, 2000);
+            copyToClipboard(cardId, () => {
+                showMessage('listMessage', '✅ 已复制: ' + cardId, 'success');
+                setTimeout(() => {
+                    document.getElementById('listMessage').classList.remove('show');
+                }, 2000);
+            });
         }
 
         // 标记为已售出
@@ -1011,17 +1123,165 @@
             el.className = `message ${type} show`;
         }
 
-        function copyToClipboard(text) {
+        // 检测是否为移动端
+        function isMobileDevice() {
+            return /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent) ||
+                   (window.innerWidth <= 768);
+        }
+
+        function copyToClipboard(text, onSuccess) {
+            // 成功反馈函数
+            const showSuccessFeedback = () => {
+                if (onSuccess) {
+                    onSuccess();
+                }
+            };
+            
+            // 移动端：显示复制弹窗（更可靠）
+            if (isMobileDevice()) {
+                showMobileCopyModal(text, showSuccessFeedback);
+                return;
+            }
+            
+            // 桌面端：尝试自动复制
+            // 方法1：尝试使用现代 Clipboard API
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text);
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        showSuccessFeedback();
+                    })
+                    .catch(err => {
+                        // 如果失败，尝试降级方案
+                        console.log('Clipboard API 失败，尝试降级方案:', err);
+                        fallbackCopy(text, showSuccessFeedback);
+                    });
             } else {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
+                // 方法2：降级方案 - 使用传统方法
+                fallbackCopy(text, showSuccessFeedback);
+            }
+        }
+        
+        // 显示移动端复制弹窗
+        function showMobileCopyModal(text, onSuccess) {
+            const modal = document.getElementById('mobileCopyModal');
+            const input = document.getElementById('mobileCopyInput');
+            
+            input.value = text;
+            modal.classList.add('show');
+            
+            // 延迟一下让弹窗显示后再选中文本
+            setTimeout(() => {
+                input.focus();
+                input.select();
+                input.setSelectionRange(0, text.length);
+                
+                // 尝试自动复制（但不自动关闭，让用户确认）
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text)
+                            .then(() => {
+                                if (onSuccess) onSuccess();
+                                // 显示成功提示，但不自动关闭，让用户看到并手动关闭
+                                showMessage('quickMessage', '✅ 已自动复制到剪贴板！', 'success');
+                            })
+                            .catch(() => {
+                                // 自动复制失败，保持弹窗打开让用户手动复制
+                                showMessage('quickMessage', '💡 自动复制失败，请点击"全选并复制"按钮或长按文本框复制', 'info');
+                            });
+                    } else {
+                        // 移动端 execCommand 不太可靠，不尝试自动复制
+                        // 保持弹窗打开，让用户手动操作
+                        showMessage('quickMessage', '💡 请点击"全选并复制"按钮或长按文本框复制', 'info');
+                    }
+                } catch (e) {
+                    // 自动复制失败，保持弹窗打开
+                    showMessage('quickMessage', '💡 请点击"全选并复制"按钮或长按文本框复制', 'info');
+                }
+            }, 100);
+        }
+        
+        // 关闭移动端复制弹窗
+        function closeMobileCopyModal() {
+            document.getElementById('mobileCopyModal').classList.remove('show');
+        }
+        
+        // 全选并复制（移动端按钮）
+        function selectMobileCopyText() {
+            const input = document.getElementById('mobileCopyInput');
+            
+            // 确保输入框获得焦点
+            input.focus();
+            
+            // 延迟一下确保焦点已经设置
+            setTimeout(() => {
+                // iOS 特殊处理
+                if (/ipad|iphone/i.test(navigator.userAgent)) {
+                    input.setSelectionRange(0, input.value.length);
+                    const range = document.createRange();
+                    range.selectNodeContents(input);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                } else {
+                    // Android 和其他平台
+                    input.select();
+                    input.setSelectionRange(0, input.value.length);
+                }
+                
+                // 尝试复制
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(input.value)
+                            .then(() => {
+                                showMessage('quickMessage', '✅ 已复制到剪贴板！可以关闭窗口了', 'success');
+                            })
+                            .catch(() => {
+                                // 复制失败，提示用户手动长按复制
+                                showMessage('quickMessage', '💡 自动复制失败，请长按文本框中的文本选择复制', 'info');
+                            });
+                    } else {
+                        // 移动端 execCommand 不可靠，提示用户手动操作
+                        showMessage('quickMessage', '💡 请长按文本框中的文本选择复制', 'info');
+                    }
+                } catch (e) {
+                    showMessage('quickMessage', '💡 请长按文本框中的文本选择复制', 'info');
+                }
+            }, 100);
+        }
+        
+        // 降级复制方案 - 兼容桌面端非 HTTPS 环境
+        function fallbackCopy(text, onSuccess) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.top = '0';
+            textarea.style.left = '0';
+            textarea.style.width = '2em';
+            textarea.style.height = '2em';
+            textarea.style.padding = '0';
+            textarea.style.border = 'none';
+            textarea.style.outline = 'none';
+            textarea.style.boxShadow = 'none';
+            textarea.style.background = 'transparent';
+            textarea.style.opacity = '0';
+            textarea.setAttribute('readonly', '');
+            document.body.appendChild(textarea);
+            
+            textarea.focus();
+            textarea.select();
+            textarea.setSelectionRange(0, text.length);
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    onSuccess();
+                } else {
+                    throw new Error('execCommand 返回 false');
+                }
+            } catch (err) {
+                console.error('降级复制方案失败:', err);
+                alert('复制失败，请手动复制：\n' + text);
+            } finally {
                 document.body.removeChild(textarea);
             }
         }
