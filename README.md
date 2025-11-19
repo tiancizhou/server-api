@@ -329,4 +329,5 @@ const ADMIN_PASSWORD = 'your_strong_password';
 - 💾 定期备份 `data/cards.json` 文件
 - 🗑️ 定期清理已使用的卡密，释放存储空间
 - 📊 建议保持可用库存数量 > 10，避免缺货
+- 📧 **重要**：Cursor 注册时只支持 Gmail、Outlook、QQ 邮箱，不支持个人域名邮箱。如果使用个人域名邮箱注册，绑卡会被拒绝
 
