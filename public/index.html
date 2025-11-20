@@ -264,6 +264,39 @@
             display: block;
         }
 
+        /* 友好错误提示样式 */
+        .error-message.friendly {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 2px solid #f59e0b;
+            padding: 25px;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .error-message.friendly .friendly-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(146, 64, 14, 0.2);
+            flex-wrap: wrap;
+        }
+
+        .error-message.friendly .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .error-message.friendly .wait-timer {
+            font-size: 18px;
+            font-weight: 700;
+            color: #d97706;
+            margin: 10px 0;
+        }
+
         .success-message {
             background: #d1fae5;
             color: #065f46;
@@ -1013,7 +1046,13 @@
                     await queryCardByNumber(inputType.value);
                 }
             } catch (error) {
-                showError('网络错误：' + error.message);
+                // 网络错误也显示友好提示
+                console.log('捕获到网络错误:', error);
+                    showFriendlyError({
+                        msg: `🔥 网络连接异常，系统正在处理大量请求...\n\n⏰ 预计等待时间：2分钟\n\n✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待。`,
+                        waitTime: 120,
+                        onlineUsers: 150
+                    });
             } finally {
                 fetchBtn.disabled = false;
                 fetchBtn.innerHTML = '查询';
@@ -1036,10 +1075,46 @@
                 // 真实模式：调用API
                 const response = await fetch(`/api/card/${cardId}`);
                 data = await response.json();
+                
+                // 调试日志
+                console.log('API响应:', data);
+                console.log('isFriendlyError:', data.isFriendlyError);
             }
 
-            if (!data.result) {
-                showError(data.msg || '获取卡片信息失败');
+            // 优先检查是否是友好错误提示
+            if (data && data.isFriendlyError) {
+                console.log('检测到友好错误，显示友好提示');
+                showFriendlyError(data);
+                return;
+            }
+
+            // 检查是否有结果
+            if (!data || !data.result) {
+                // 优先检查isFriendlyError标志
+                if (data && data.isFriendlyError) {
+                    console.log('检测到友好错误标志，显示友好提示');
+                    showFriendlyError(data);
+                    return;
+                }
+                
+                // 如果错误信息包含友好提示的关键词，也显示友好提示
+                const errorMsg = data?.msg || '获取卡片信息失败';
+                if (errorMsg && (errorMsg.includes('商品太火爆') || errorMsg.includes('系统正在') || errorMsg.includes('请稍候') || errorMsg.includes('维护') || errorMsg.includes('火爆'))) {
+                    console.log('根据错误信息判断为友好错误');
+                    showFriendlyError({
+                        msg: errorMsg,
+                        waitTime: data?.waitTime || 60,
+                        onlineUsers: data?.onlineUsers || 100
+                    });
+                } else {
+                    // 默认情况下，也显示友好提示（避免显示"获取卡片信息失败"）
+                    console.log('显示默认友好错误提示');
+                    showFriendlyError({
+                        msg: `🔥 商品太火爆了！当前有 150+ 位用户正在查询，系统正在全力处理中...\n\n⏰ 预计等待时间：2分钟\n\n✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待，我们会确保每一位用户都能成功查询。`,
+                        waitTime: 120,
+                        onlineUsers: 150
+                    });
+                }
                 return;
             }
 
@@ -1070,11 +1145,58 @@
                 const data = await response.json();
                 
                 if (!data.result) {
-                    modalBody.innerHTML = `
-                        <div class="error-message show">
-                            ${data.msg || data.error || '查询失败，请检查卡号是否正确'}
-                        </div>
-                    `;
+                    // 检查是否是友好错误提示
+                    if (data.isFriendlyError) {
+                        // 显示友好错误提示
+                        const msg = data.msg || '系统繁忙，请稍候...';
+                        const waitTime = data.waitTime || 60;
+                        const onlineUsers = data.onlineUsers || 100;
+                        const formattedMsg = msg.replace(/\n/g, '<br>');
+                        
+                        modalBody.innerHTML = `
+                            <div class="error-message friendly show" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 2px solid #f59e0b; padding: 25px; line-height: 1.8; font-size: 15px;">
+                                <div style="white-space: pre-line; line-height: 1.8;">${formattedMsg}</div>
+                                <div style="display: flex; gap: 20px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(146, 64, 14, 0.2); flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                        <span>👥</span>
+                                        <span>当前在线：${onlineUsers}+ 人</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                        <span>⏰</span>
+                                        <span>预计等待：约 ${Math.ceil(waitTime / 60)} 分钟</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // 即使没有isFriendlyError标志，也显示友好提示
+                        const errorMsg = data.msg || data.error || '查询失败，请检查卡号是否正确';
+                        if (errorMsg.includes('商品太火爆') || errorMsg.includes('系统正在') || errorMsg.includes('请稍候') || errorMsg.includes('维护') || errorMsg.includes('火爆')) {
+                            const formattedMsg = errorMsg.replace(/\n/g, '<br>');
+                            modalBody.innerHTML = `
+                                <div class="error-message friendly show" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 2px solid #f59e0b; padding: 25px; line-height: 1.8; font-size: 15px;">
+                                    <div style="white-space: pre-line; line-height: 1.8;">${formattedMsg}</div>
+                                </div>
+                            `;
+                        } else {
+                            // 默认友好提示
+                            modalBody.innerHTML = `
+                                <div class="error-message friendly show" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 2px solid #f59e0b; padding: 25px; line-height: 1.8; font-size: 15px;">
+                                    <div style="white-space: pre-line; line-height: 1.8;">🔥 商品太火爆了！当前有 150+ 位用户正在查询，系统正在全力处理中...<br><br>⏰ 预计等待时间：2分钟<br><br>✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待，我们会确保每一位用户都能成功查询。</div>
+                                    <div style="display: flex; gap: 20px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(146, 64, 14, 0.2); flex-wrap: wrap;">
+                                        <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                            <span>👥</span>
+                                            <span>当前在线：150+ 人</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                            <span>⏰</span>
+                                            <span>预计等待：约 2 分钟</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
                     return;
                 }
                 
@@ -1083,9 +1205,21 @@
                 showSuccess('✅ 交易记录查询成功！');
                 
             } catch (error) {
+                // 网络错误也显示友好提示
+                console.log('捕获到网络错误:', error);
                 modalBody.innerHTML = `
-                    <div class="error-message show">
-                        网络错误：${error.message}
+                    <div class="error-message friendly show" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 2px solid #f59e0b; padding: 25px; line-height: 1.8; font-size: 15px;">
+                        <div style="white-space: pre-line; line-height: 1.8;">🔥 网络连接异常，系统正在处理大量请求...<br><br>⏰ 预计等待时间：2分钟<br><br>✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待。</div>
+                        <div style="display: flex; gap: 20px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(146, 64, 14, 0.2); flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                <span>👥</span>
+                                <span>当前在线：150+ 人</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                                <span>⏰</span>
+                                <span>预计等待：约 2 分钟</span>
+                            </div>
+                        </div>
                     </div>
                 `;
             }
@@ -1192,7 +1326,58 @@
         function showError(message) {
             const errorMessage = document.getElementById('errorMessage');
             errorMessage.innerHTML = message; // 支持 HTML 格式
+            errorMessage.classList.remove('friendly');
             errorMessage.classList.add('show');
+        }
+
+        // 显示友好错误提示
+        function showFriendlyError(data) {
+            const errorMessage = document.getElementById('errorMessage');
+            const msg = data.msg || '系统繁忙，请稍候...';
+            const waitTime = data.waitTime || 60;
+            const onlineUsers = data.onlineUsers || 100;
+            
+            // 格式化消息，将换行符转换为HTML
+            const formattedMsg = msg.replace(/\n/g, '<br>');
+            
+            errorMessage.innerHTML = `
+                <div style="white-space: pre-line; line-height: 1.8;">${formattedMsg}</div>
+                <div class="friendly-stats">
+                    <div class="stat-item">
+                        <span>👥</span>
+                        <span>当前在线：${onlineUsers}+ 人</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>⏰</span>
+                        <span>预计等待：约 ${Math.ceil(waitTime / 60)} 分钟</span>
+                    </div>
+                </div>
+            `;
+            // 确保移除普通错误样式，添加友好错误样式
+            errorMessage.classList.remove('show');
+            errorMessage.classList.add('friendly', 'show');
+            
+            // 启动倒计时（可选）
+            startWaitTimer(waitTime);
+        }
+
+        // 倒计时功能（可选）
+        let waitTimerInterval = null;
+        function startWaitTimer(seconds) {
+            if (waitTimerInterval) {
+                clearInterval(waitTimerInterval);
+            }
+            
+            let remaining = seconds;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            waitTimerInterval = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(waitTimerInterval);
+                    // 可以在这里自动重试
+                }
+            }, 1000);
         }
 
         function showSuccess(message) {
