@@ -262,6 +262,23 @@
                     <input type="text" id="apiToken" class="form-input" placeholder="输入API Token" style="font-family: 'Courier New', monospace; word-break: break-all;">
                     <div class="form-hint">用于API认证的Token（直接输入完整token，系统不做任何处理，原样使用）</div>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">自动抓包设置</label>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="autoCaptureEnabled" style="width: 18px; height: 18px; cursor: pointer;">
+                            <span>启用自动抓包（检测到错误时自动抓包并更新配置）</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <span>触发间隔：</span>
+                            <input type="number" id="autoCaptureCooldown" class="form-input" style="width: 120px;" min="10" step="10" value="60">
+                            <span>秒（最小10秒）</span>
+                        </label>
+                    </div>
+                    <div class="form-hint">当检测到 invalid_token 或网络连接错误时，系统会自动抓包并更新配置。触发间隔用于防止频繁触发。</div>
+                </div>
                 <div class="action-buttons">
                     <button class="btn btn-primary" onclick="updateApiConfig()">💾 保存配置</button>
                     <button class="btn btn-secondary" onclick="testApiConfig()">🧪 测试配置</button>
@@ -334,6 +351,9 @@
                     document.getElementById('apiBaseUrl').value = data.config.apiBaseUrl || '';
                     // 完整显示Token
                     document.getElementById('apiToken').value = data.config.apiToken || '';
+                    // 加载自动抓包配置
+                    document.getElementById('autoCaptureEnabled').checked = data.config.autoCaptureEnabled !== false;
+                    document.getElementById('autoCaptureCooldown').value = (data.config.autoCaptureCooldown || 60000) / 1000;
                     showMessage('configMessage', '✅ 配置已加载', 'success');
                 } else {
                     showMessage('configMessage', data.message, 'error');
@@ -348,11 +368,20 @@
         function updateApiConfig() {
             const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
             const apiToken = document.getElementById('apiToken').value.trim();
+            const autoCaptureEnabled = document.getElementById('autoCaptureEnabled').checked;
+            const autoCaptureCooldown = parseInt(document.getElementById('autoCaptureCooldown').value) * 1000; // 转换为毫秒
 
             if (!apiBaseUrl || !apiToken) {
                 showMessage('configMessage', '❌ API地址和Token不能为空', 'error');
                 return;
             }
+            
+            if (isNaN(autoCaptureCooldown) || autoCaptureCooldown < 10000) {
+                showMessage('configMessage', '❌ 触发间隔必须大于等于10秒', 'error');
+                return;
+            }
+
+            showMessage('configMessage', '🔄 正在保存配置...', 'info');
 
             fetch('/api/admin/config/update', {
                 method: 'POST',
@@ -360,7 +389,12 @@
                     'x-admin-password': adminPassword,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ apiBaseUrl, apiToken })
+                body: JSON.stringify({ 
+                    apiBaseUrl, 
+                    apiToken,
+                    autoCaptureEnabled,
+                    autoCaptureCooldown
+                })
             })
             .then(res => res.json())
             .then(data => {

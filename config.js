@@ -15,6 +15,10 @@ module.exports = {
     
     // 数据文件路径
     DATA_DIR: './data',
-    DATA_FILE: './data/cards.json'
+    DATA_FILE: './data/cards.json',
+    
+    // 自动抓包配置
+    AUTO_CAPTURE_ENABLED: process.env.AUTO_CAPTURE_ENABLED !== 'false', // 默认启用
+    AUTO_CAPTURE_COOLDOWN: parseInt(process.env.AUTO_CAPTURE_COOLDOWN) || 60000 // 默认60秒（单位：毫秒）
 };
 

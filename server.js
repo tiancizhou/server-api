@@ -11,7 +11,6 @@ const app = express();
 // 自动更新配置的锁（防止并发触发）
 let autoUpdateLock = false;
 let lastAutoUpdateTime = 0;
-const AUTO_UPDATE_COOLDOWN = 60000; // 1分钟内不重复触发
 
 // 初始化配置管理器
 (async () => {
@@ -65,11 +64,21 @@ function shouldAutoUpdate(error) {
     const isNetworkError = error.code === 'ECONNREFUSED' || 
                           error.code === 'ENOTFOUND' || 
                           error.code === 'ETIMEDOUT' ||
-                          error.code === 'ECONNRESET';
+                          error.code === 'ECONNRESET' ||
+                          error.code === 'ERR_BAD_REQUEST';
     
-    // 检查是否是认证错误
+    // 检查HTTP状态码
     const status = error.response?.status;
-    const isAuthError = status === 401 || status === 403;
+    // 401/403: 认证错误
+    // 404: API地址或路径错误（应该触发自动抓包）
+    // 500/502/503/504: 服务器错误（可能是临时的，但也可能是API地址错误）
+    const isHttpError = status === 401 || 
+                       status === 403 || 
+                       status === 404 || 
+                       status === 500 || 
+                       status === 502 || 
+                       status === 503 || 
+                       status === 504;
     
     // 检查响应数据中是否包含invalid token
     const responseData = error.response?.data;
@@ -82,11 +91,18 @@ function shouldAutoUpdate(error) {
         ))
     );
     
-    return isNetworkError || isAuthError || hasInvalidToken;
+    return isNetworkError || isHttpError || hasInvalidToken;
 }
 
 // 自动抓包并更新配置
 async function autoUpdateConfig() {
+    // 检查是否启用自动抓包
+    const autoCaptureEnabled = configManager.getConfigValue('AUTO_CAPTURE_ENABLED');
+    if (!autoCaptureEnabled) {
+        console.log('[AutoUpdate] 自动抓包已禁用，跳过本次触发');
+        return false;
+    }
+    
     // 检查锁和冷却时间
     const now = Date.now();
     if (autoUpdateLock) {
@@ -94,8 +110,9 @@ async function autoUpdateConfig() {
         return false;
     }
     
-    if (now - lastAutoUpdateTime < AUTO_UPDATE_COOLDOWN) {
-        console.log(`[AutoUpdate] 距离上次自动更新不足${AUTO_UPDATE_COOLDOWN/1000}秒，跳过本次触发`);
+    const cooldown = configManager.getConfigValue('AUTO_CAPTURE_COOLDOWN') || 60000;
+    if (now - lastAutoUpdateTime < cooldown) {
+        console.log(`[AutoUpdate] 距离上次自动更新不足${cooldown/1000}秒，跳过本次触发`);
         return false;
     }
     
@@ -523,7 +540,9 @@ app.get('/api/admin/config', authMiddleware, (req, res) => {
         config: {
             apiBaseUrl: runtimeConfig.CARD_API_BASE_URL || '',
             apiToken: token,  // 直接返回保存的token，不做任何处理
-            hasToken: !!token
+            hasToken: !!token,
+            autoCaptureEnabled: runtimeConfig.AUTO_CAPTURE_ENABLED !== false, // 默认true
+            autoCaptureCooldown: runtimeConfig.AUTO_CAPTURE_COOLDOWN || 60000 // 默认60秒
         }
     });
 });
@@ -531,7 +550,7 @@ app.get('/api/admin/config', authMiddleware, (req, res) => {
 // 更新API配置
 app.post('/api/admin/config/update', authMiddleware, async (req, res) => {
     try {
-        const { apiBaseUrl, apiToken } = req.body;
+        const { apiBaseUrl, apiToken, autoCaptureEnabled, autoCaptureCooldown } = req.body;
         
         if (!apiBaseUrl || !apiToken) {
             return res.status(400).json({
@@ -543,22 +562,45 @@ app.post('/api/admin/config/update', authMiddleware, async (req, res) => {
         // 直接保存用户输入的token，不做任何处理（用户自己决定格式）
         const finalToken = apiToken.trim();
 
-        // 更新配置
-        await configManager.updateConfig({
+        // 构建更新对象
+        const updates = {
             CARD_API_BASE_URL: apiBaseUrl.trim(),
             CARD_API_TOKEN: finalToken
-        });
+        };
+        
+        // 如果提供了自动抓包配置，也一起更新
+        if (autoCaptureEnabled !== undefined) {
+            updates.AUTO_CAPTURE_ENABLED = autoCaptureEnabled === true || autoCaptureEnabled === 'true';
+        }
+        
+        if (autoCaptureCooldown !== undefined) {
+            const cooldown = parseInt(autoCaptureCooldown);
+            if (!isNaN(cooldown) && cooldown > 0) {
+                updates.AUTO_CAPTURE_COOLDOWN = cooldown;
+            }
+        }
+
+        // 更新配置
+        await configManager.updateConfig(updates);
 
         console.log('[Config] 配置已更新');
         console.log(`[Config] 新API地址: ${apiBaseUrl}`);
-        console.log(`[Config] 新Token: ${finalToken}`);
+        console.log(`[Config] 新Token: ${finalToken.substring(0, 20)}...`);
+        if (autoCaptureEnabled !== undefined) {
+            console.log(`[Config] 自动抓包: ${updates.AUTO_CAPTURE_ENABLED ? '启用' : '禁用'}`);
+        }
+        if (autoCaptureCooldown !== undefined) {
+            console.log(`[Config] 抓包间隔: ${updates.AUTO_CAPTURE_COOLDOWN / 1000}秒`);
+        }
 
         res.json({
             success: true,
             message: '配置已更新并立即生效',
             config: {
                 apiBaseUrl: apiBaseUrl,
-                apiToken: finalToken  // 返回用户输入的完整token
+                apiToken: finalToken,  // 返回用户输入的完整token
+                autoCaptureEnabled: updates.AUTO_CAPTURE_ENABLED !== undefined ? updates.AUTO_CAPTURE_ENABLED : configManager.getConfigValue('AUTO_CAPTURE_ENABLED'),
+                autoCaptureCooldown: updates.AUTO_CAPTURE_COOLDOWN || configManager.getConfigValue('AUTO_CAPTURE_COOLDOWN')
             }
         });
     } catch (error) {
