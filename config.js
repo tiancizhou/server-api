@@ -1,7 +1,7 @@
 // 配置文件
 module.exports = {
     // 服务器端口
-    PORT: process.env.PORT || 5201,
+    PORT: process.env.PORT || 5200,
     
     // 管理后台密码
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'qq5201314',
@@ -19,6 +19,11 @@ module.exports = {
     
     // 自动抓包配置
     AUTO_CAPTURE_ENABLED: process.env.AUTO_CAPTURE_ENABLED !== 'false', // 默认启用
-    AUTO_CAPTURE_COOLDOWN: parseInt(process.env.AUTO_CAPTURE_COOLDOWN) || 60000 // 默认60秒（单位：毫秒）
+    AUTO_CAPTURE_COOLDOWN: parseInt(process.env.AUTO_CAPTURE_COOLDOWN) || 60000, // 默认60秒（单位：毫秒）
+    
+    // 接口调用限制配置
+    RATE_LIMIT_ENABLED: process.env.RATE_LIMIT_ENABLED !== 'false', // 默认启用
+    RATE_LIMIT_WINDOW: parseInt(process.env.RATE_LIMIT_WINDOW) || 60000, // 时间窗口（默认60秒，单位：毫秒）
+    RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 10 // 时间窗口内最大请求次数（默认10次）
 };
 

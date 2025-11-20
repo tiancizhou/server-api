@@ -279,6 +279,28 @@
                     </div>
                     <div class="form-hint">当检测到 invalid_token 或网络连接错误时，系统会自动抓包并更新配置。触发间隔用于防止频繁触发。</div>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">接口调用限制</label>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="rateLimitEnabled" style="width: 18px; height: 18px; cursor: pointer;">
+                            <span>启用接口调用限制（防止频繁点击）</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <span>时间窗口：</span>
+                            <input type="number" id="rateLimitWindow" class="form-input" style="width: 120px;" min="10" step="10" value="60">
+                            <span>秒</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <span>最大请求次数：</span>
+                            <input type="number" id="rateLimitMaxRequests" class="form-input" style="width: 120px;" min="1" step="1" value="10">
+                            <span>次</span>
+                        </label>
+                    </div>
+                    <div class="form-hint">限制每个IP在指定时间窗口内的最大请求次数，超过限制将返回友好提示，防止用户频繁点击查询按钮。</div>
+                </div>
                 <div class="action-buttons">
                     <button class="btn btn-primary" onclick="updateApiConfig()">💾 保存配置</button>
                     <button class="btn btn-secondary" onclick="testApiConfig()">🧪 测试配置</button>
@@ -354,6 +376,10 @@
                     // 加载自动抓包配置
                     document.getElementById('autoCaptureEnabled').checked = data.config.autoCaptureEnabled !== false;
                     document.getElementById('autoCaptureCooldown').value = (data.config.autoCaptureCooldown || 60000) / 1000;
+                    // 加载限流配置
+                    document.getElementById('rateLimitEnabled').checked = data.config.rateLimitEnabled !== false;
+                    document.getElementById('rateLimitWindow').value = (data.config.rateLimitWindow || 60000) / 1000;
+                    document.getElementById('rateLimitMaxRequests').value = data.config.rateLimitMaxRequests || 10;
                     showMessage('configMessage', '✅ 配置已加载', 'success');
                 } else {
                     showMessage('configMessage', data.message, 'error');
@@ -370,6 +396,9 @@
             const apiToken = document.getElementById('apiToken').value.trim();
             const autoCaptureEnabled = document.getElementById('autoCaptureEnabled').checked;
             const autoCaptureCooldown = parseInt(document.getElementById('autoCaptureCooldown').value) * 1000; // 转换为毫秒
+            const rateLimitEnabled = document.getElementById('rateLimitEnabled').checked;
+            const rateLimitWindow = parseInt(document.getElementById('rateLimitWindow').value) * 1000; // 转换为毫秒
+            const rateLimitMaxRequests = parseInt(document.getElementById('rateLimitMaxRequests').value);
 
             if (!apiBaseUrl || !apiToken) {
                 showMessage('configMessage', '❌ API地址和Token不能为空', 'error');
@@ -378,6 +407,16 @@
             
             if (isNaN(autoCaptureCooldown) || autoCaptureCooldown < 10000) {
                 showMessage('configMessage', '❌ 触发间隔必须大于等于10秒', 'error');
+                return;
+            }
+            
+            if (isNaN(rateLimitWindow) || rateLimitWindow < 10000) {
+                showMessage('configMessage', '❌ 限流时间窗口必须大于等于10秒', 'error');
+                return;
+            }
+            
+            if (isNaN(rateLimitMaxRequests) || rateLimitMaxRequests < 1) {
+                showMessage('configMessage', '❌ 最大请求次数必须大于等于1', 'error');
                 return;
             }
 
@@ -393,7 +432,10 @@
                     apiBaseUrl, 
                     apiToken,
                     autoCaptureEnabled,
-                    autoCaptureCooldown
+                    autoCaptureCooldown,
+                    rateLimitEnabled,
+                    rateLimitWindow,
+                    rateLimitMaxRequests
                 })
             })
             .then(res => res.json())

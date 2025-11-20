@@ -29,6 +29,85 @@ const ADMIN_PASSWORD = config.ADMIN_PASSWORD;
 app.use(express.json());
 app.use(express.static('public'));
 
+// 获取客户端真实IP地址
+function getClientIP(req) {
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+           req.headers['x-real-ip'] ||
+           req.connection?.remoteAddress ||
+           req.socket?.remoteAddress ||
+           req.ip ||
+           'unknown';
+}
+
+// 接口调用限制（基于IP的滑动窗口）
+const rateLimitStore = new Map(); // IP -> { requests: [{timestamp}], lastCleanup: timestamp }
+
+// 清理过期的请求记录（定期清理，避免内存泄漏）
+function cleanupRateLimitStore() {
+    const now = Date.now();
+    const window = configManager.getConfigValue('RATE_LIMIT_WINDOW') || 60000;
+    
+    for (const [ip, data] of rateLimitStore.entries()) {
+        // 只保留时间窗口内的请求
+        data.requests = data.requests.filter(timestamp => now - timestamp < window);
+        
+        // 如果没有请求了，删除这个IP的记录
+        if (data.requests.length === 0) {
+            rateLimitStore.delete(ip);
+        }
+    }
+}
+
+// 每5分钟清理一次
+setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
+
+// 限流中间件
+function rateLimitMiddleware(req, res, next) {
+    const rateLimitEnabled = configManager.getConfigValue('RATE_LIMIT_ENABLED');
+    
+    // 如果限流未启用，直接通过
+    if (!rateLimitEnabled) {
+        return next();
+    }
+    
+    const ip = getClientIP(req);
+    const now = Date.now();
+    const window = configManager.getConfigValue('RATE_LIMIT_WINDOW') || 60000;
+    const maxRequests = configManager.getConfigValue('RATE_LIMIT_MAX_REQUESTS') || 10;
+    
+    // 获取或创建该IP的记录
+    if (!rateLimitStore.has(ip)) {
+        rateLimitStore.set(ip, { requests: [], lastCleanup: now });
+    }
+    
+    const ipData = rateLimitStore.get(ip);
+    
+    // 清理该IP的过期请求
+    ipData.requests = ipData.requests.filter(timestamp => now - timestamp < window);
+    
+    // 检查是否超过限制
+    if (ipData.requests.length >= maxRequests) {
+        const oldestRequest = ipData.requests[0];
+        const waitTime = Math.ceil((oldestRequest + window - now) / 1000); // 需要等待的秒数
+        
+        console.log(`[RateLimit] IP ${ip} 超过请求限制，需要等待 ${waitTime} 秒`);
+        
+        return res.status(200).json({
+            result: null,
+            msg: `⏰ 请求过于频繁，请稍后再试\n\n⏳ 请等待 ${waitTime} 秒后重试\n\n💡 提示：为了确保服务稳定，系统限制了请求频率`,
+            isFriendlyError: true,
+            rateLimitExceeded: true,
+            waitTime: waitTime
+        });
+    }
+    
+    // 记录本次请求
+    ipData.requests.push(now);
+    
+    // 继续处理请求
+    next();
+}
+
 // 创建带认证的 axios 请求配置（动态读取配置）
 function getAuthConfig() {
     const runtimeConfig = configManager.getConfig();
@@ -265,7 +344,7 @@ app.get('/api/card/:cardId', async (req, res) => {
 });
 
 // API 中转接口 - 激活卡片
-app.post('/api/card/activate/:cardId', async (req, res) => {
+app.post('/api/card/activate/:cardId', rateLimitMiddleware, async (req, res) => {
     try {
         const { cardId } = req.params;
         const response = await axios.post(
@@ -318,7 +397,7 @@ app.post('/api/card/activate/:cardId', async (req, res) => {
 });
 
 // API 中转接口 - 通过卡号查询卡片信息和交易记录
-app.get('/api/card/info/:cardNumber', async (req, res) => {
+app.get('/api/card/info/:cardNumber', rateLimitMiddleware, async (req, res) => {
     // 在try块外获取cardNumber，确保在catch块中也能访问
     const { cardNumber } = req.params;
     
@@ -550,7 +629,7 @@ app.get('/api/admin/config', authMiddleware, (req, res) => {
 // 更新API配置
 app.post('/api/admin/config/update', authMiddleware, async (req, res) => {
     try {
-        const { apiBaseUrl, apiToken, autoCaptureEnabled, autoCaptureCooldown } = req.body;
+        const { apiBaseUrl, apiToken, autoCaptureEnabled, autoCaptureCooldown, rateLimitEnabled, rateLimitWindow, rateLimitMaxRequests } = req.body;
         
         if (!apiBaseUrl || !apiToken) {
             return res.status(400).json({
@@ -579,6 +658,25 @@ app.post('/api/admin/config/update', authMiddleware, async (req, res) => {
                 updates.AUTO_CAPTURE_COOLDOWN = cooldown;
             }
         }
+        
+        // 如果提供了限流配置，也一起更新
+        if (rateLimitEnabled !== undefined) {
+            updates.RATE_LIMIT_ENABLED = rateLimitEnabled === true || rateLimitEnabled === 'true';
+        }
+        
+        if (rateLimitWindow !== undefined) {
+            const window = parseInt(rateLimitWindow);
+            if (!isNaN(window) && window > 0) {
+                updates.RATE_LIMIT_WINDOW = window;
+            }
+        }
+        
+        if (rateLimitMaxRequests !== undefined) {
+            const maxRequests = parseInt(rateLimitMaxRequests);
+            if (!isNaN(maxRequests) && maxRequests > 0) {
+                updates.RATE_LIMIT_MAX_REQUESTS = maxRequests;
+            }
+        }
 
         // 更新配置
         await configManager.updateConfig(updates);
@@ -592,6 +690,15 @@ app.post('/api/admin/config/update', authMiddleware, async (req, res) => {
         if (autoCaptureCooldown !== undefined) {
             console.log(`[Config] 抓包间隔: ${updates.AUTO_CAPTURE_COOLDOWN / 1000}秒`);
         }
+        if (rateLimitEnabled !== undefined) {
+            console.log(`[Config] 接口限流: ${updates.RATE_LIMIT_ENABLED ? '启用' : '禁用'}`);
+        }
+        if (rateLimitWindow !== undefined) {
+            console.log(`[Config] 限流时间窗口: ${updates.RATE_LIMIT_WINDOW / 1000}秒`);
+        }
+        if (rateLimitMaxRequests !== undefined) {
+            console.log(`[Config] 最大请求次数: ${updates.RATE_LIMIT_MAX_REQUESTS}次`);
+        }
 
         res.json({
             success: true,
@@ -600,7 +707,10 @@ app.post('/api/admin/config/update', authMiddleware, async (req, res) => {
                 apiBaseUrl: apiBaseUrl,
                 apiToken: finalToken,  // 返回用户输入的完整token
                 autoCaptureEnabled: updates.AUTO_CAPTURE_ENABLED !== undefined ? updates.AUTO_CAPTURE_ENABLED : configManager.getConfigValue('AUTO_CAPTURE_ENABLED'),
-                autoCaptureCooldown: updates.AUTO_CAPTURE_COOLDOWN || configManager.getConfigValue('AUTO_CAPTURE_COOLDOWN')
+                autoCaptureCooldown: updates.AUTO_CAPTURE_COOLDOWN || configManager.getConfigValue('AUTO_CAPTURE_COOLDOWN'),
+                rateLimitEnabled: updates.RATE_LIMIT_ENABLED !== undefined ? updates.RATE_LIMIT_ENABLED : configManager.getConfigValue('RATE_LIMIT_ENABLED'),
+                rateLimitWindow: updates.RATE_LIMIT_WINDOW || configManager.getConfigValue('RATE_LIMIT_WINDOW'),
+                rateLimitMaxRequests: updates.RATE_LIMIT_MAX_REQUESTS || configManager.getConfigValue('RATE_LIMIT_MAX_REQUESTS')
             }
         });
     } catch (error) {
