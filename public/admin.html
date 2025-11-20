@@ -266,6 +266,7 @@
                     <button class="btn btn-primary" onclick="updateApiConfig()">💾 保存配置</button>
                     <button class="btn btn-secondary" onclick="testApiConfig()">🧪 测试配置</button>
                     <button class="btn btn-secondary" onclick="loadApiConfig()">🔄 刷新配置</button>
+                    <button class="btn btn-secondary" onclick="autoCapture()" id="captureBtn">🔍 自动抓包</button>
                 </div>
                 <div id="configMessage" class="message"></div>
                 <div class="form-hint" style="margin-top: 15px; color: #10b981; font-weight: 500;">
@@ -377,6 +378,44 @@
         }
 
         // 测试API配置
+        // 自动抓包
+        function autoCapture() {
+            const btn = document.getElementById('captureBtn');
+            const originalText = btn.innerHTML;
+            
+            // 禁用按钮并显示加载状态
+            btn.disabled = true;
+            btn.innerHTML = '⏳ 正在抓包...';
+            showMessage('configMessage', '正在执行抓包，请稍候（可能需要30-60秒）...', 'info');
+            
+            fetch('/api/admin/capture', {
+                method: 'POST',
+                headers: {
+                    'x-admin-password': adminPassword,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                
+                if (data.success) {
+                    // 自动填充表单
+                    document.getElementById('apiBaseUrl').value = data.data.apiBaseUrl || '';
+                    document.getElementById('apiToken').value = data.data.apiToken || '';
+                    showMessage('configMessage', '✅ 抓包成功！已自动填充到表单，请点击"保存配置"保存', 'success');
+                } else {
+                    showMessage('configMessage', '❌ ' + data.message, 'error');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                showMessage('configMessage', '抓包失败: ' + err.message, 'error');
+            });
+        }
+
         function testApiConfig() {
             const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
             const apiToken = document.getElementById('apiToken').value.trim();

@@ -4,6 +4,7 @@ const path = require('path');
 const cardManager = require('./cardManager');
 const config = require('./config');
 const configManager = require('./configManager');
+const captureApiRequest = require('./capture-api');
 
 const app = express();
 
@@ -442,6 +443,49 @@ app.post('/api/admin/config/update', authMiddleware, async (req, res) => {
             success: false,
             message: '更新配置失败',
             error: error.message
+        });
+    }
+});
+
+// 自动抓包API配置
+app.post('/api/admin/capture', authMiddleware, async (req, res) => {
+    try {
+        console.log('[Capture] 开始执行自动抓包...');
+        
+        // 执行抓包（设置超时时间，避免请求挂起）
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('抓包超时（超过60秒）')), 60000);
+        });
+        
+        const capturePromise = captureApiRequest();
+        
+        const result = await Promise.race([capturePromise, timeoutPromise]);
+        
+        if (result.success) {
+            console.log('[Capture] 抓包成功');
+            console.log(`[Capture] API地址: ${result.apiBaseUrl}`);
+            console.log(`[Capture] Token: ${result.apiToken}`);
+            
+            res.json({
+                success: true,
+                message: '抓包成功',
+                data: {
+                    apiBaseUrl: result.apiBaseUrl,
+                    apiToken: result.apiToken
+                }
+            });
+        } else {
+            console.log(`[Capture] 抓包失败: ${result.message}`);
+            res.status(400).json({
+                success: false,
+                message: result.message || '抓包失败'
+            });
+        }
+    } catch (error) {
+        console.error('[Capture] 抓包错误:', error.message);
+        res.status(500).json({
+            success: false,
+            message: '抓包失败: ' + error.message
         });
     }
 });
