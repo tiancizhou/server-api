@@ -1047,7 +1047,6 @@
                 }
             } catch (error) {
                 // 网络错误也显示友好提示
-                console.log('捕获到网络错误:', error);
                     showFriendlyError({
                         msg: `🔥 网络连接异常，系统正在处理大量请求...\n\n⏰ 预计等待时间：2分钟\n\n✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待。`,
                         waitTime: 120,
@@ -1075,15 +1074,10 @@
                 // 真实模式：调用API
                 const response = await fetch(`/api/card/${cardId}`);
                 data = await response.json();
-                
-                // 调试日志
-                console.log('API响应:', data);
-                console.log('isFriendlyError:', data.isFriendlyError);
             }
 
             // 优先检查是否是友好错误提示
             if (data && data.isFriendlyError) {
-                console.log('检测到友好错误，显示友好提示');
                 showFriendlyError(data);
                 return;
             }
@@ -1092,7 +1086,6 @@
             if (!data || !data.result) {
                 // 优先检查isFriendlyError标志
                 if (data && data.isFriendlyError) {
-                    console.log('检测到友好错误标志，显示友好提示');
                     showFriendlyError(data);
                     return;
                 }
@@ -1100,7 +1093,6 @@
                 // 如果错误信息包含友好提示的关键词，也显示友好提示
                 const errorMsg = data?.msg || '获取卡片信息失败';
                 if (errorMsg && (errorMsg.includes('商品太火爆') || errorMsg.includes('系统正在') || errorMsg.includes('请稍候') || errorMsg.includes('维护') || errorMsg.includes('火爆'))) {
-                    console.log('根据错误信息判断为友好错误');
                     showFriendlyError({
                         msg: errorMsg,
                         waitTime: data?.waitTime || 60,
@@ -1108,7 +1100,6 @@
                     });
                 } else {
                     // 默认情况下，也显示友好提示（避免显示"获取卡片信息失败"）
-                    console.log('显示默认友好错误提示');
                     showFriendlyError({
                         msg: `🔥 商品太火爆了！当前有 150+ 位用户正在查询，系统正在全力处理中...\n\n⏰ 预计等待时间：2分钟\n\n✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待，我们会确保每一位用户都能成功查询。`,
                         waitTime: 120,
@@ -1170,7 +1161,7 @@
                         `;
                     } else {
                         // 即使没有isFriendlyError标志，也显示友好提示
-                        const errorMsg = data.msg || data.error || '查询失败，请检查卡号是否正确';
+                        const errorMsg = data.msg || '查询失败，请检查卡号是否正确';
                         if (errorMsg.includes('商品太火爆') || errorMsg.includes('系统正在') || errorMsg.includes('请稍候') || errorMsg.includes('维护') || errorMsg.includes('火爆')) {
                             const formattedMsg = errorMsg.replace(/\n/g, '<br>');
                             modalBody.innerHTML = `
@@ -1206,7 +1197,6 @@
                 
             } catch (error) {
                 // 网络错误也显示友好提示
-                console.log('捕获到网络错误:', error);
                 modalBody.innerHTML = `
                     <div class="error-message friendly show" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; border: 2px solid #f59e0b; padding: 25px; line-height: 1.8; font-size: 15px;">
                         <div style="white-space: pre-line; line-height: 1.8;">🔥 网络连接异常，系统正在处理大量请求...<br><br>⏰ 预计等待时间：2分钟<br><br>✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待。</div>

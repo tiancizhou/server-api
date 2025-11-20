@@ -55,6 +55,35 @@ app.get('/api/card/:cardId', async (req, res) => {
             getAuthConfig()
         );
         console.log(`[API] 成功获取卡片信息: ${cardId}`);
+        
+        // 检查上游API返回的数据，如果包含错误信息，转换为友好提示
+        if (response.data && response.data.error) {
+            // 上游API返回了错误，转换为友好提示
+            const cardIdHash = simpleHash(req.params.cardId);
+            const waitSeconds = 30 + (cardIdHash % 91);
+            const waitMinutes = Math.floor(waitSeconds / 60);
+            const waitSecondsRemainder = waitSeconds % 60;
+            const waitTimeText = waitMinutes > 0 ? `${waitMinutes}分${waitSecondsRemainder}秒` : `${waitSeconds}秒`;
+            const onlineUsers = 80 + (cardIdHash % 101);
+            
+            // 判断错误类型（通过错误信息判断）
+            const errorMsg = response.data.error || '';
+            let friendlyMessage = '';
+            if (errorMsg.toLowerCase().includes('token') || errorMsg.toLowerCase().includes('auth') || errorMsg.toLowerCase().includes('invalid')) {
+                friendlyMessage = `🔄 系统正在维护升级中，请稍候...\n\n⏰ 预计等待时间：${waitTimeText}\n\n✨ 我们正在优化服务体验，请稍后再试。`;
+            } else {
+                friendlyMessage = `🔥 商品太火爆了！当前有 ${onlineUsers}+ 位用户正在查询，系统正在全力处理中...\n\n⏰ 预计等待时间：${waitTimeText}\n\n✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待，我们会确保每一位用户都能成功查询。`;
+            }
+            
+            return res.status(200).json({
+                result: null,
+                msg: friendlyMessage,
+                isFriendlyError: true,
+                waitTime: waitSeconds,
+                onlineUsers: onlineUsers
+            });
+        }
+        
         res.json(response.data);
     } catch (error) {
         console.error(`[API] 获取卡片信息失败: ${req.params.cardId}`, error.message);
@@ -104,15 +133,13 @@ app.get('/api/card/:cardId', async (req, res) => {
         }
         
         // 所有错误都返回友好提示（状态码200，避免前端显示错误）
+        // 不返回真实错误信息，防止开发人员通过控制台查看
         res.status(200).json({
             result: null,
             msg: friendlyMessage,
             isFriendlyError: true,
             waitTime: waitSeconds,
-            onlineUsers: onlineUsers,
-            error: error.message,
-            errorCode: error.code,
-            errorStatus: status
+            onlineUsers: onlineUsers
         });
     }
 });
@@ -127,6 +154,16 @@ app.post('/api/card/activate/:cardId', async (req, res) => {
             getAuthConfig()
         );
         
+        // 检查上游API返回的数据，如果包含错误信息，转换为友好提示
+        if (response.data && response.data.error) {
+            // 上游API返回了错误，转换为友好提示
+            return res.status(200).json({
+                result: null,
+                msg: '系统繁忙，请稍后再试',
+                isFriendlyError: true
+            });
+        }
+        
         // 激活成功后，标记为已使用
         if (response.data && response.data.result) {
             cardManager.markCardAsUsed(cardId);
@@ -134,10 +171,11 @@ app.post('/api/card/activate/:cardId', async (req, res) => {
         
         res.json(response.data);
     } catch (error) {
-        res.status(error.response?.status || 500).json({
+        // 不返回真实错误信息，防止开发人员通过控制台查看
+        res.status(200).json({
             result: null,
-            msg: '激活卡片失败',
-            error: error.message
+            msg: '系统繁忙，请稍后再试',
+            isFriendlyError: true
         });
     }
 });
@@ -152,6 +190,36 @@ app.get('/api/card/info/:cardNumber', async (req, res) => {
             `${getApiBaseUrl()}/api/m/get_card_info/${cardNumber}`,
             getAuthConfig()
         );
+        
+        // 检查上游API返回的数据，如果包含错误信息，转换为友好提示
+        if (response.data && response.data.error) {
+            // 上游API返回了错误，转换为友好提示
+            const safeCardNumber = cardNumber || req.params.cardNumber || 'default';
+            const cardNumberHash = simpleHash(safeCardNumber);
+            const waitSeconds = 30 + (cardNumberHash % 91);
+            const waitMinutes = Math.floor(waitSeconds / 60);
+            const waitSecondsRemainder = waitSeconds % 60;
+            const waitTimeText = waitMinutes > 0 ? `${waitMinutes}分${waitSecondsRemainder}秒` : `${waitSeconds}秒`;
+            const onlineUsers = 80 + (cardNumberHash % 101);
+            
+            // 判断错误类型（通过错误信息判断）
+            const errorMsg = response.data.error || '';
+            let friendlyMessage = '';
+            if (errorMsg.toLowerCase().includes('token') || errorMsg.toLowerCase().includes('auth') || errorMsg.toLowerCase().includes('invalid')) {
+                friendlyMessage = `🔄 系统正在维护升级中，请稍候...\n\n⏰ 预计等待时间：${waitTimeText}\n\n✨ 我们正在优化服务体验，请稍后再试。`;
+            } else {
+                friendlyMessage = `🔥 商品太火爆了！当前有 ${onlineUsers}+ 位用户正在查询，系统正在全力处理中...\n\n⏰ 预计等待时间：${waitTimeText}\n\n✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待，我们会确保每一位用户都能成功查询。`;
+            }
+            
+            return res.status(200).json({
+                result: null,
+                msg: friendlyMessage,
+                isFriendlyError: true,
+                waitTime: waitSeconds,
+                onlineUsers: onlineUsers
+            });
+        }
+        
         res.json(response.data);
     } catch (error) {
         console.error(`[API] 查询卡号交易记录失败: ${cardNumber || req.params.cardNumber || '未知'}`, error.message);
@@ -202,15 +270,13 @@ app.get('/api/card/info/:cardNumber', async (req, res) => {
         }
         
         // 所有错误都返回友好提示（状态码200，避免前端显示错误）
+        // 不返回真实错误信息，防止开发人员通过控制台查看
         res.status(200).json({
             result: null,
             msg: friendlyMessage,
             isFriendlyError: true,
             waitTime: waitSeconds,
-            onlineUsers: onlineUsers,
-            error: error.response?.data?.error || error.message,
-            errorCode: error.code,
-            errorStatus: status
+            onlineUsers: onlineUsers
         });
     }
 });
