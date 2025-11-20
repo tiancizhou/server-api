@@ -1,7 +1,7 @@
 // 配置文件
 module.exports = {
     // 服务器端口
-    PORT: process.env.PORT || 5200,
+    PORT: process.env.PORT || 5201,
     
     // 管理后台密码
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'qq5201314',

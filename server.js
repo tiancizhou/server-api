@@ -8,6 +8,11 @@ const captureApiRequest = require('./capture-api');
 
 const app = express();
 
+// 自动更新配置的锁（防止并发触发）
+let autoUpdateLock = false;
+let lastAutoUpdateTime = 0;
+const AUTO_UPDATE_COOLDOWN = 60000; // 1分钟内不重复触发
+
 // 初始化配置管理器
 (async () => {
     await configManager.initialize();
@@ -43,6 +48,97 @@ function getApiBaseUrl() {
     return configManager.getConfigValue('CARD_API_BASE_URL');
 }
 
+// 简单的哈希函数（用于生成固定的随机数）
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // 转换为32位整数
+    }
+    return Math.abs(hash);
+}
+
+// 检测是否需要自动更新配置
+function shouldAutoUpdate(error) {
+    // 检查是否是网络错误
+    const isNetworkError = error.code === 'ECONNREFUSED' || 
+                          error.code === 'ENOTFOUND' || 
+                          error.code === 'ETIMEDOUT' ||
+                          error.code === 'ECONNRESET';
+    
+    // 检查是否是认证错误
+    const status = error.response?.status;
+    const isAuthError = status === 401 || status === 403;
+    
+    // 检查响应数据中是否包含invalid token
+    const responseData = error.response?.data;
+    const hasInvalidToken = responseData && (
+        (typeof responseData === 'string' && responseData.toLowerCase().includes('invalid token')) ||
+        (typeof responseData === 'object' && (
+            responseData.error?.toLowerCase().includes('invalid token') ||
+            responseData.error?.toLowerCase().includes('invalid_token') ||
+            responseData.message?.toLowerCase().includes('invalid token')
+        ))
+    );
+    
+    return isNetworkError || isAuthError || hasInvalidToken;
+}
+
+// 自动抓包并更新配置
+async function autoUpdateConfig() {
+    // 检查锁和冷却时间
+    const now = Date.now();
+    if (autoUpdateLock) {
+        console.log('[AutoUpdate] 自动更新正在进行中，跳过本次触发');
+        return false;
+    }
+    
+    if (now - lastAutoUpdateTime < AUTO_UPDATE_COOLDOWN) {
+        console.log(`[AutoUpdate] 距离上次自动更新不足${AUTO_UPDATE_COOLDOWN/1000}秒，跳过本次触发`);
+        return false;
+    }
+    
+    // 设置锁
+    autoUpdateLock = true;
+    lastAutoUpdateTime = now;
+    
+    try {
+        console.log('[AutoUpdate] 开始自动抓包并更新配置...');
+        
+        // 执行抓包
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('抓包超时（超过60秒）')), 60000);
+        });
+        
+        const capturePromise = captureApiRequest();
+        const result = await Promise.race([capturePromise, timeoutPromise]);
+        
+        if (result.success && result.apiBaseUrl && result.apiToken) {
+            // 更新配置
+            await configManager.updateConfig({
+                CARD_API_BASE_URL: result.apiBaseUrl.trim(),
+                CARD_API_TOKEN: result.apiToken.trim()
+            });
+            
+            console.log('[AutoUpdate] ✅ 配置已自动更新');
+            console.log(`[AutoUpdate] 新API地址: ${result.apiBaseUrl}`);
+            console.log(`[AutoUpdate] 新Token: ${result.apiToken.substring(0, 20)}...`);
+            
+            return true;
+        } else {
+            console.log(`[AutoUpdate] ❌ 抓包失败: ${result.message}`);
+            return false;
+        }
+    } catch (error) {
+        console.error('[AutoUpdate] ❌ 自动更新失败:', error.message);
+        return false;
+    } finally {
+        // 释放锁
+        autoUpdateLock = false;
+    }
+}
+
 // API 中转接口 - 获取卡片信息
 app.get('/api/card/:cardId', async (req, res) => {
     try {
@@ -59,6 +155,16 @@ app.get('/api/card/:cardId', async (req, res) => {
         
         // 检查上游API返回的数据，如果包含错误信息，转换为友好提示
         if (response.data && response.data.error) {
+            // 检查是否是invalid token错误，如果是则自动更新配置
+            const errorMsg = (response.data.error || '').toLowerCase();
+            if (errorMsg.includes('invalid token') || errorMsg.includes('invalid_token') || errorMsg.includes('token')) {
+                console.log('[API] 检测到Token错误，尝试自动更新配置...');
+                // 异步执行自动更新（不阻塞响应）
+                autoUpdateConfig().catch(err => {
+                    console.error('[API] 自动更新配置失败:', err.message);
+                });
+            }
+            
             // 上游API返回了错误，转换为友好提示
             const cardIdHash = simpleHash(req.params.cardId);
             const waitSeconds = 30 + (cardIdHash % 91);
@@ -68,9 +174,8 @@ app.get('/api/card/:cardId', async (req, res) => {
             const onlineUsers = 80 + (cardIdHash % 101);
             
             // 判断错误类型（通过错误信息判断）
-            const errorMsg = response.data.error || '';
             let friendlyMessage = '';
-            if (errorMsg.toLowerCase().includes('token') || errorMsg.toLowerCase().includes('auth') || errorMsg.toLowerCase().includes('invalid')) {
+            if (errorMsg.includes('token') || errorMsg.includes('auth') || errorMsg.includes('invalid')) {
                 friendlyMessage = `🔄 系统正在维护升级中，请稍候...\n\n⏰ 预计等待时间：${waitTimeText}\n\n✨ 我们正在优化服务体验，请稍后再试。`;
             } else {
                 friendlyMessage = `🔥 商品太火爆了！当前有 ${onlineUsers}+ 位用户正在查询，系统正在全力处理中...\n\n⏰ 预计等待时间：${waitTimeText}\n\n✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待，我们会确保每一位用户都能成功查询。`;
@@ -95,22 +200,19 @@ app.get('/api/card/:cardId', async (req, res) => {
             message: error.message
         });
         
+        // 检查是否需要自动更新配置
+        if (shouldAutoUpdate(error)) {
+            console.log('[API] 检测到需要自动更新的错误，触发自动更新...');
+            // 异步执行自动更新（不阻塞响应）
+            autoUpdateConfig().catch(err => {
+                console.error('[API] 自动更新配置失败:', err.message);
+            });
+        }
+        
         // 生成友好的错误提示
         const isNetworkError = error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT';
         const status = error.response?.status;
         const isAuthError = status === 401 || status === 403;
-        
-        // 基于卡密ID生成固定的统计数据（确保同一卡密每次查询显示相同的数据）
-        // 使用简单的哈希算法，将卡密ID转换为固定范围内的数值
-        function simpleHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash; // 转换为32位整数
-            }
-            return Math.abs(hash);
-        }
         
         const cardIdHash = simpleHash(req.params.cardId);
         
@@ -157,6 +259,15 @@ app.post('/api/card/activate/:cardId', async (req, res) => {
         
         // 检查上游API返回的数据，如果包含错误信息，转换为友好提示
         if (response.data && response.data.error) {
+            // 检查是否是invalid token错误
+            const errorMsg = (response.data.error || '').toLowerCase();
+            if (errorMsg.includes('invalid token') || errorMsg.includes('invalid_token') || errorMsg.includes('token')) {
+                console.log('[API] 检测到Token错误，尝试自动更新配置...');
+                autoUpdateConfig().catch(err => {
+                    console.error('[API] 自动更新配置失败:', err.message);
+                });
+            }
+            
             // 上游API返回了错误，转换为友好提示
             return res.status(200).json({
                 result: null,
@@ -172,6 +283,14 @@ app.post('/api/card/activate/:cardId', async (req, res) => {
         
         res.json(response.data);
     } catch (error) {
+        // 检查是否需要自动更新配置
+        if (shouldAutoUpdate(error)) {
+            console.log('[API] 检测到需要自动更新的错误，触发自动更新...');
+            autoUpdateConfig().catch(err => {
+                console.error('[API] 自动更新配置失败:', err.message);
+            });
+        }
+        
         // 不返回真实错误信息，防止开发人员通过控制台查看
         res.status(200).json({
             result: null,
@@ -194,6 +313,15 @@ app.get('/api/card/info/:cardNumber', async (req, res) => {
         
         // 检查上游API返回的数据，如果包含错误信息，转换为友好提示
         if (response.data && response.data.error) {
+            // 检查是否是invalid token错误
+            const errorMsg = (response.data.error || '').toLowerCase();
+            if (errorMsg.includes('invalid token') || errorMsg.includes('invalid_token') || errorMsg.includes('token')) {
+                console.log('[API] 检测到Token错误，尝试自动更新配置...');
+                autoUpdateConfig().catch(err => {
+                    console.error('[API] 自动更新配置失败:', err.message);
+                });
+            }
+            
             // 上游API返回了错误，转换为友好提示
             const safeCardNumber = cardNumber || req.params.cardNumber || 'default';
             const cardNumberHash = simpleHash(safeCardNumber);
@@ -204,9 +332,8 @@ app.get('/api/card/info/:cardNumber', async (req, res) => {
             const onlineUsers = 80 + (cardNumberHash % 101);
             
             // 判断错误类型（通过错误信息判断）
-            const errorMsg = response.data.error || '';
             let friendlyMessage = '';
-            if (errorMsg.toLowerCase().includes('token') || errorMsg.toLowerCase().includes('auth') || errorMsg.toLowerCase().includes('invalid')) {
+            if (errorMsg.includes('token') || errorMsg.includes('auth') || errorMsg.includes('invalid')) {
                 friendlyMessage = `🔄 系统正在维护升级中，请稍候...\n\n⏰ 预计等待时间：${waitTimeText}\n\n✨ 我们正在优化服务体验，请稍后再试。`;
             } else {
                 friendlyMessage = `🔥 商品太火爆了！当前有 ${onlineUsers}+ 位用户正在查询，系统正在全力处理中...\n\n⏰ 预计等待时间：${waitTimeText}\n\n✨ 温馨提示：由于访问量较大，系统正在排队处理您的请求，请耐心等待，我们会确保每一位用户都能成功查询。`;
@@ -231,21 +358,18 @@ app.get('/api/card/info/:cardNumber', async (req, res) => {
             message: error.message
         });
         
+        // 检查是否需要自动更新配置
+        if (shouldAutoUpdate(error)) {
+            console.log('[API] 检测到需要自动更新的错误，触发自动更新...');
+            autoUpdateConfig().catch(err => {
+                console.error('[API] 自动更新配置失败:', err.message);
+            });
+        }
+        
         // 生成友好的错误提示
         const isNetworkError = error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT';
         const status = error.response?.status;
         const isAuthError = status === 401 || status === 403;
-        
-        // 基于卡号生成固定的统计数据（确保同一卡号每次查询显示相同的数据）
-        function simpleHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash; // 转换为32位整数
-            }
-            return Math.abs(hash);
-        }
         
         // 确保cardNumber存在，如果不存在则使用默认值
         const safeCardNumber = cardNumber || req.params.cardNumber || 'default';
