@@ -236,7 +236,7 @@ async function autoUpdateConfig() {
 }
 
 // API 中转接口 - 获取卡片信息
-app.get('/api/card/:cardId', async (req, res) => {
+app.get('/api/card/:cardId', rateLimitMiddleware, async (req, res) => {
     try {
         const { cardId } = req.params;
         console.log(`[API] 收到卡片查询请求: ${cardId}`);
@@ -621,7 +621,10 @@ app.get('/api/admin/config', authMiddleware, (req, res) => {
             apiToken: token,  // 直接返回保存的token，不做任何处理
             hasToken: !!token,
             autoCaptureEnabled: runtimeConfig.AUTO_CAPTURE_ENABLED !== false, // 默认true
-            autoCaptureCooldown: runtimeConfig.AUTO_CAPTURE_COOLDOWN || 60000 // 默认60秒
+            autoCaptureCooldown: runtimeConfig.AUTO_CAPTURE_COOLDOWN || 60000, // 默认60秒
+            rateLimitEnabled: runtimeConfig.RATE_LIMIT_ENABLED !== false, // 默认true
+            rateLimitWindow: runtimeConfig.RATE_LIMIT_WINDOW || 60000, // 默认60秒
+            rateLimitMaxRequests: runtimeConfig.RATE_LIMIT_MAX_REQUESTS || 10 // 默认10次
         }
     });
 });
@@ -700,17 +703,20 @@ app.post('/api/admin/config/update', authMiddleware, async (req, res) => {
             console.log(`[Config] 最大请求次数: ${updates.RATE_LIMIT_MAX_REQUESTS}次`);
         }
 
+        // 获取更新后的完整配置（确保返回实际保存的值）
+        const updatedConfig = configManager.getConfig();
+        
         res.json({
             success: true,
             message: '配置已更新并立即生效',
             config: {
-                apiBaseUrl: apiBaseUrl,
-                apiToken: finalToken,  // 返回用户输入的完整token
-                autoCaptureEnabled: updates.AUTO_CAPTURE_ENABLED !== undefined ? updates.AUTO_CAPTURE_ENABLED : configManager.getConfigValue('AUTO_CAPTURE_ENABLED'),
-                autoCaptureCooldown: updates.AUTO_CAPTURE_COOLDOWN || configManager.getConfigValue('AUTO_CAPTURE_COOLDOWN'),
-                rateLimitEnabled: updates.RATE_LIMIT_ENABLED !== undefined ? updates.RATE_LIMIT_ENABLED : configManager.getConfigValue('RATE_LIMIT_ENABLED'),
-                rateLimitWindow: updates.RATE_LIMIT_WINDOW || configManager.getConfigValue('RATE_LIMIT_WINDOW'),
-                rateLimitMaxRequests: updates.RATE_LIMIT_MAX_REQUESTS || configManager.getConfigValue('RATE_LIMIT_MAX_REQUESTS')
+                apiBaseUrl: updatedConfig.CARD_API_BASE_URL || apiBaseUrl,
+                apiToken: updatedConfig.CARD_API_TOKEN || finalToken,  // 返回用户输入的完整token
+                autoCaptureEnabled: updatedConfig.AUTO_CAPTURE_ENABLED !== false,
+                autoCaptureCooldown: updatedConfig.AUTO_CAPTURE_COOLDOWN || 60000,
+                rateLimitEnabled: updatedConfig.RATE_LIMIT_ENABLED !== false,
+                rateLimitWindow: updatedConfig.RATE_LIMIT_WINDOW || 60000,
+                rateLimitMaxRequests: updatedConfig.RATE_LIMIT_MAX_REQUESTS || 10
             }
         });
     } catch (error) {

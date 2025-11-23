@@ -442,8 +442,15 @@
             .then(data => {
                 if (data.success) {
                     showMessage('configMessage', '✅ 配置已保存并立即生效！', 'success');
-                    // 显示更新后的完整Token
-                    document.getElementById('apiToken').value = data.config.apiToken;
+                    // 更新所有配置字段
+                    document.getElementById('apiBaseUrl').value = data.config.apiBaseUrl || '';
+                    document.getElementById('apiToken').value = data.config.apiToken || '';
+                    document.getElementById('autoCaptureEnabled').checked = data.config.autoCaptureEnabled !== false;
+                    document.getElementById('autoCaptureCooldown').value = (data.config.autoCaptureCooldown || 60000) / 1000;
+                    // 更新限流配置
+                    document.getElementById('rateLimitEnabled').checked = data.config.rateLimitEnabled !== false;
+                    document.getElementById('rateLimitWindow').value = (data.config.rateLimitWindow || 60000) / 1000;
+                    document.getElementById('rateLimitMaxRequests').value = data.config.rateLimitMaxRequests || 10;
                 } else {
                     showMessage('configMessage', '❌ ' + data.message, 'error');
                 }
