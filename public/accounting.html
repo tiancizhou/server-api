@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>算账工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
+                         'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stat-value.positive {
+            color: #10b981;
+        }
+
+        .stat-value.negative {
+            color: #ef4444;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"] {
+            padding: 12px 15px;
+            font-size: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        td {
+            font-size: 14px;
+            color: #1f2937;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .message-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 算账工具</h1>
+
+        <!-- 统计信息 -->
+        <div class="card">
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-label">总成本</div>
+                    <div class="stat-value" id="totalCost">¥0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">总销售额</div>
+                    <div class="stat-value" id="totalSales">¥0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">盈利</div>
+                    <div class="stat-value" id="profit">¥0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">剩余卡片</div>
+                    <div class="stat-value" id="remainingCards">0 张</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 消息提示 -->
+        <div id="message" class="message"></div>
+
+        <!-- 进货记录 -->
+        <div class="card">
+            <div class="section-title">
+                <span>📦 进货记录</span>
+            </div>
+            <form id="purchaseForm" onsubmit="addPurchase(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>日期</label>
+                        <input type="date" id="purchaseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>金额 (¥)</label>
+                        <input type="number" step="0.01" id="purchaseAmount" placeholder="420" required>
+                    </div>
+                    <div class="form-group">
+                        <label>卡片数量 (张)</label>
+                        <input type="number" id="purchaseCardCount" placeholder="200" required>
+                    </div>
+                    <div class="form-group">
+                        <label>渠道费用 (¥)</label>
+                        <input type="number" step="0.01" id="purchaseChannelFee" placeholder="200" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <input type="text" id="purchaseNote" placeholder="可选">
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <label style="opacity: 0;">提交</label>
+                        <button type="submit" class="btn btn-primary">添加进货</button>
+                    </div>
+                </div>
+            </form>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>金额</th>
+                            <th>卡片数</th>
+                            <th>渠道费</th>
+                            <th>总成本</th>
+                            <th>备注</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchasesTable">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div>暂无进货记录</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 销售记录 -->
+        <div class="card">
+            <div class="section-title">
+                <span>💵 销售记录</span>
+            </div>
+            <form id="saleForm" onsubmit="addSale(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>日期</label>
+                        <input type="date" id="saleDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>金额 (¥)</label>
+                        <input type="number" step="0.01" id="saleAmount" placeholder="681.71" required>
+                    </div>
+                    <div class="form-group">
+                        <label>售出卡片数 (张)</label>
+                        <input type="number" id="saleCardCount" placeholder="可选，用于计算剩余卡片">
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <input type="text" id="saleNote" placeholder="可选">
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <label style="opacity: 0;">提交</label>
+                        <button type="submit" class="btn btn-primary">添加销售</button>
+                    </div>
+                </div>
+            </form>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>金额</th>
+                            <th>售出卡片</th>
+                            <th>备注</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTable">
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div>暂无销售记录</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 其他费用 -->
+        <div class="card">
+            <div class="section-title">
+                <span>💸 其他费用</span>
+            </div>
+            <form id="expenseForm" onsubmit="addExpense(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>日期</label>
+                        <input type="date" id="expenseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>金额 (¥)</label>
+                        <input type="number" step="0.01" id="expenseAmount" placeholder="12" required>
+                    </div>
+                    <div class="form-group">
+                        <label>说明</label>
+                        <input type="text" id="expenseDescription" placeholder="服务器、会员等">
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <label style="opacity: 0;">提交</label>
+                        <button type="submit" class="btn btn-primary">添加费用</button>
+                    </div>
+                </div>
+            </form>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>金额</th>
+                            <th>说明</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expensesTable">
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div>暂无费用记录</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 设置默认日期为今天
+        document.getElementById('purchaseDate').valueAsDate = new Date();
+        document.getElementById('saleDate').valueAsDate = new Date();
+        document.getElementById('expenseDate').valueAsDate = new Date();
+
+        // 加载数据
+        async function loadData() {
+            try {
+                // 先获取统计信息，判断是否需要分页
+                const response = await fetch('/api/accounting/data');
+                const result = await response.json();
+                if (result.success) {
+                    renderData(result.data);
+                    updateStatistics(result.statistics);
+                    
+                    // 如果数据量很大，显示提示
+                    if (result.stats && result.stats.totalRecords > 5000) {
+                        console.log(`数据量较大: ${result.stats.totalRecords} 条记录，已启用性能优化`);
+                    }
+                }
+            } catch (error) {
+                showMessage('加载数据失败: ' + error.message, 'error');
+            }
+        }
+
+        // 渲染数据
+        function renderData(data) {
+            renderPurchases(data.purchases);
+            renderSales(data.sales);
+            renderExpenses(data.otherExpenses);
+        }
+
+        // 渲染进货记录
+        function renderPurchases(purchases) {
+            const tbody = document.getElementById('purchasesTable');
+            if (purchases.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>暂无进货记录</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = purchases.map(p => {
+                const totalCost = p.amount + (p.channelFee || 0);
+                return `
+                    <tr>
+                        <td>${p.date}</td>
+                        <td>¥${p.amount.toFixed(2)}</td>
+                        <td>${p.cardCount} 张</td>
+                        <td>¥${(p.channelFee || 0).toFixed(2)}</td>
+                        <td>¥${totalCost.toFixed(2)}</td>
+                        <td>${p.note || '-'}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deletePurchase('${p.id}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 渲染销售记录
+        function renderSales(sales) {
+            const tbody = document.getElementById('salesTable');
+            if (sales.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>暂无销售记录</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = sales.map(s => {
+                return `
+                    <tr>
+                        <td>${s.date}</td>
+                        <td>¥${s.amount.toFixed(2)}</td>
+                        <td>${s.cardCount || 0} 张</td>
+                        <td>${s.note || '-'}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteSale('${s.id}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 渲染费用记录
+        function renderExpenses(expenses) {
+            const tbody = document.getElementById('expensesTable');
+            if (expenses.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>暂无费用记录</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = expenses.map(e => {
+                return `
+                    <tr>
+                        <td>${e.date}</td>
+                        <td>¥${e.amount.toFixed(2)}</td>
+                        <td>${e.description || '-'}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteExpense('${e.id}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 更新统计信息
+        function updateStatistics(stats) {
+            document.getElementById('totalCost').textContent = '¥' + stats.totalCost.toFixed(2);
+            document.getElementById('totalSales').textContent = '¥' + stats.totalSales.toFixed(2);
+            
+            const profitEl = document.getElementById('profit');
+            profitEl.textContent = '¥' + stats.profit.toFixed(2);
+            profitEl.className = 'stat-value ' + (stats.profit >= 0 ? 'positive' : 'negative');
+            
+            document.getElementById('remainingCards').textContent = stats.remainingCards + ' 张';
+        }
+
+        // 添加进货
+        async function addPurchase(event) {
+            event.preventDefault();
+            const date = document.getElementById('purchaseDate').value;
+            const amount = document.getElementById('purchaseAmount').value;
+            const cardCount = document.getElementById('purchaseCardCount').value;
+            const channelFee = document.getElementById('purchaseChannelFee').value || 0;
+            const note = document.getElementById('purchaseNote').value;
+
+            try {
+                const response = await fetch('/api/accounting/purchase', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, amount, cardCount, channelFee, note })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('进货记录添加成功', 'success');
+                    document.getElementById('purchaseForm').reset();
+                    document.getElementById('purchaseDate').valueAsDate = new Date();
+                    loadData();
+                } else {
+                    showMessage(result.message || '添加失败', 'error');
+                }
+            } catch (error) {
+                showMessage('添加失败: ' + error.message, 'error');
+            }
+        }
+
+        // 添加销售
+        async function addSale(event) {
+            event.preventDefault();
+            const date = document.getElementById('saleDate').value;
+            const amount = document.getElementById('saleAmount').value;
+            const cardCount = document.getElementById('saleCardCount').value || 0;
+            const note = document.getElementById('saleNote').value;
+
+            try {
+                const response = await fetch('/api/accounting/sale', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, amount, cardCount, note })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('销售记录添加成功', 'success');
+                    document.getElementById('saleForm').reset();
+                    document.getElementById('saleDate').valueAsDate = new Date();
+                    loadData();
+                } else {
+                    showMessage(result.message || '添加失败', 'error');
+                }
+            } catch (error) {
+                showMessage('添加失败: ' + error.message, 'error');
+            }
+        }
+
+        // 添加费用
+        async function addExpense(event) {
+            event.preventDefault();
+            const date = document.getElementById('expenseDate').value;
+            const amount = document.getElementById('expenseAmount').value;
+            const description = document.getElementById('expenseDescription').value;
+
+            try {
+                const response = await fetch('/api/accounting/expense', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, amount, description })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('费用记录添加成功', 'success');
+                    document.getElementById('expenseForm').reset();
+                    document.getElementById('expenseDate').valueAsDate = new Date();
+                    loadData();
+                } else {
+                    showMessage(result.message || '添加失败', 'error');
+                }
+            } catch (error) {
+                showMessage('添加失败: ' + error.message, 'error');
+            }
+        }
+
+        // 删除进货
+        async function deletePurchase(id) {
+            if (!confirm('确定要删除这条进货记录吗？')) return;
+            try {
+                const response = await fetch(`/api/accounting/purchase/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('删除成功', 'success');
+                    loadData();
+                } else {
+                    showMessage(result.message || '删除失败', 'error');
+                }
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 删除销售
+        async function deleteSale(id) {
+            if (!confirm('确定要删除这条销售记录吗？')) return;
+            try {
+                const response = await fetch(`/api/accounting/sale/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('删除成功', 'success');
+                    loadData();
+                } else {
+                    showMessage(result.message || '删除失败', 'error');
+                }
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 删除费用
+        async function deleteExpense(id) {
+            if (!confirm('确定要删除这条费用记录吗？')) return;
+            try {
+                const response = await fetch(`/api/accounting/expense/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('删除成功', 'success');
+                    loadData();
+                } else {
+                    showMessage(result.message || '删除失败', 'error');
+                }
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示消息
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message message-${type} show`;
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 3000);
+        }
+
+        // 页面加载时获取数据
+        loadData();
+    </script>
+</body>
+</html>
+

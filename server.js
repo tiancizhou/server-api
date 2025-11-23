@@ -5,6 +5,7 @@ const cardManager = require('./cardManager');
 const config = require('./config');
 const configManager = require('./configManager');
 const captureApiRequest = require('./capture-api');
+const accountingManager = require('./accountingManager');
 
 const app = express();
 
@@ -525,6 +526,11 @@ app.get('/guide', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', '使用说明.html'));
 });
 
+// 算账工具页面
+app.get('/accounting', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'accounting.html'));
+});
+
 // 获取统计信息
 app.get('/api/admin/stats', authMiddleware, (req, res) => {
     const stats = cardManager.getStats();
@@ -823,6 +829,205 @@ app.post('/api/admin/config/test', authMiddleware, async (req, res) => {
         res.status(500).json({
             success: false,
             message: '测试配置失败',
+            error: error.message
+        });
+    }
+});
+
+// ==================== 算账工具 API ====================
+
+// 获取所有账务数据和统计信息（支持分页）
+app.get('/api/accounting/data', (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 1000;
+        
+        // 如果请求分页，返回分页数据
+        if (page > 1 || pageSize < 10000) {
+            const data = accountingManager.getAllData(page, pageSize);
+            const statistics = accountingManager.getStatistics();
+            const stats = accountingManager.getDataStats();
+            
+            res.json({
+                success: true,
+                data,
+                statistics,
+                stats,
+                pagination: {
+                    page,
+                    pageSize,
+                    totalPages: Math.ceil(stats.totalRecords / pageSize)
+                }
+            });
+        } else {
+            // 返回全部数据（但会受缓存优化）
+            const data = accountingManager.getAllData();
+            const statistics = accountingManager.getStatistics();
+            const stats = accountingManager.getDataStats();
+            
+            res.json({
+                success: true,
+                data,
+                statistics,
+                stats
+            });
+        }
+    } catch (error) {
+        console.error('[Accounting] 获取数据失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取数据失败',
+            error: error.message
+        });
+    }
+});
+
+// 添加进货记录
+app.post('/api/accounting/purchase', (req, res) => {
+    try {
+        const { date, amount, cardCount, channelFee, note } = req.body;
+        if (!date || !amount || !cardCount) {
+            return res.status(400).json({
+                success: false,
+                message: '日期、金额和卡片数量不能为空'
+            });
+        }
+        const result = accountingManager.addPurchase(date, amount, cardCount, channelFee, note);
+        res.json(result);
+    } catch (error) {
+        console.error('[Accounting] 添加进货记录失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '添加失败',
+            error: error.message
+        });
+    }
+});
+
+// 添加销售记录
+app.post('/api/accounting/sale', (req, res) => {
+    try {
+        const { date, amount, cardCount, note } = req.body;
+        if (!date || !amount) {
+            return res.status(400).json({
+                success: false,
+                message: '日期和金额不能为空'
+            });
+        }
+        const result = accountingManager.addSale(date, amount, cardCount, note);
+        res.json(result);
+    } catch (error) {
+        console.error('[Accounting] 添加销售记录失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '添加失败',
+            error: error.message
+        });
+    }
+});
+
+// 添加其他费用
+app.post('/api/accounting/expense', (req, res) => {
+    try {
+        const { date, amount, description } = req.body;
+        if (!date || !amount) {
+            return res.status(400).json({
+                success: false,
+                message: '日期和金额不能为空'
+            });
+        }
+        const result = accountingManager.addOtherExpense(date, amount, description);
+        res.json(result);
+    } catch (error) {
+        console.error('[Accounting] 添加费用记录失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '添加失败',
+            error: error.message
+        });
+    }
+});
+
+// 删除进货记录
+app.delete('/api/accounting/purchase/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = accountingManager.deletePurchase(id);
+        res.json(result);
+    } catch (error) {
+        console.error('[Accounting] 删除进货记录失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '删除失败',
+            error: error.message
+        });
+    }
+});
+
+// 删除销售记录
+app.delete('/api/accounting/sale/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = accountingManager.deleteSale(id);
+        res.json(result);
+    } catch (error) {
+        console.error('[Accounting] 删除销售记录失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '删除失败',
+            error: error.message
+        });
+    }
+});
+
+// 删除其他费用
+app.delete('/api/accounting/expense/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = accountingManager.deleteOtherExpense(id);
+        res.json(result);
+    } catch (error) {
+        console.error('[Accounting] 删除费用记录失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '删除失败',
+            error: error.message
+        });
+    }
+});
+
+// 获取数据统计信息
+app.get('/api/accounting/stats', (req, res) => {
+    try {
+        const stats = accountingManager.getDataStats();
+        res.json({ success: true, stats });
+    } catch (error) {
+        console.error('[Accounting] 获取统计信息失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '获取统计信息失败',
+            error: error.message
+        });
+    }
+});
+
+// 清理旧数据（管理功能）
+app.post('/api/accounting/cleanup', (req, res) => {
+    try {
+        const { type, keepCount } = req.body;
+        if (!type || !['purchases', 'sales', 'otherExpenses'].includes(type)) {
+            return res.status(400).json({
+                success: false,
+                message: '无效的数据类型'
+            });
+        }
+        const result = accountingManager.cleanupData(type, keepCount || 5000);
+        res.json(result);
+    } catch (error) {
+        console.error('[Accounting] 清理数据失败:', error);
+        res.status(500).json({
+            success: false,
+            message: '清理失败',
             error: error.message
         });
     }
