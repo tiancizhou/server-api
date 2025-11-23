@@ -282,7 +282,7 @@
                             <li>激活成功后，复制以下信息：
                                 <ul style="margin-top: 10px; margin-left: 20px;">
                                     <li><strong>卡号</strong>（16位数字）</li>
-                                    <li><strong>有效期</strong>（MM/YYYY 格式，例如：12/2025）</li>
+                                    <li><strong>有效期</strong>（MM/YY 格式，例如：11/31）</li>
                                     <li><strong>CVC</strong>（3位安全码）</li>
                                     <li><strong>账单地址</strong>（131 Lupine Drive, Torrington, WY 82240）</li>
                                 </ul>
@@ -315,14 +315,14 @@
                             <div class="warning-box-content">
                                 <strong>重要！这是最容易填错的地方！</strong><br>
                                 <ul style="margin-top: 10px; margin-left: 20px;">
-                                    <li>格式：<span class="field-highlight">MM/YYYY</span>（月/年）</li>
-                                    <li>例如：如果显示 <span class="field-highlight">12/2025</span>，则填写 <span class="field-highlight">12/2025</span></li>
-                                    <li><strong>不要填成：</strong>12/25、1225、2025-12 等错误格式</li>
-                                    <li><strong>正确格式：</strong>月份必须是两位数（01-12），年份必须是四位数（如2025）</li>
+                                    <li>格式：<span class="field-highlight">MM/YY</span>（月/年，两位年份）</li>
+                                    <li>例如：如果显示 <span class="field-highlight">11/31</span>，则填写 <span class="field-highlight">11/31</span>（表示11月/2031年）</li>
+                                    <li><strong>不要填成：</strong>11/2031、1131、2031-11 等错误格式</li>
+                                    <li><strong>正确格式：</strong>月份必须是两位数（01-12），年份是两位数（如31表示2031年）</li>
                                 </ul>
                                 <div class="format-example" style="margin-top: 10px;">
-                                    正确示例：12/2025 ✅<br>
-                                    错误示例：12/25 ❌ | 1225 ❌ | 2025-12 ❌
+                                    正确示例：11/31 ✅（表示2031年11月）<br>
+                                    错误示例：11/2031 ❌ | 1131 ❌ | 2031-11 ❌
                                 </div>
                             </div>
                         </div>
@@ -380,7 +380,7 @@
                         <ul style="margin-top: 10px; margin-left: 20px;">
                             <li><strong>1. 换浏览器</strong>：尝试使用不同的浏览器（Chrome、Firefox、Edge等）</li>
                             <li><strong>2. 换IP节点</strong>：更换网络环境或使用VPN，更换IP地址</li>
-                            <li><strong>3. 检查信息填写</strong>：确认有效期格式为 MM/YYYY，邮政编码为 82240</li>
+                            <li><strong>3. 检查信息填写</strong>：确认有效期格式为 MM/YY（例如：11/31），邮政编码为 82240</li>
                             <li><strong>4. 稍后重试</strong>：等待一段时间后再次尝试</li>
                         </ul>
                         <div class="highlight-box" style="margin-top: 15px; background: #fef3c7;">
@@ -440,7 +440,7 @@
                     <div class="step-content">
                         <ul style="list-style: none; padding-left: 0;">
                             <li style="margin-bottom: 10px;">✅ <strong>卡号：</strong>16位数字，无空格</li>
-                            <li style="margin-bottom: 10px;">✅ <strong>有效期：</strong>MM/YYYY 格式（例如：12/2025）</li>
+                            <li style="margin-bottom: 10px;">✅ <strong>有效期：</strong>MM/YY 格式（例如：11/31）</li>
                             <li style="margin-bottom: 10px;">✅ <strong>CVC：</strong>3位数字</li>
                             <li style="margin-bottom: 10px;">✅ <strong>邮政编码：</strong>82240（5位数字）</li>
                             <li style="margin-bottom: 10px;">✅ <strong>账单地址：</strong>131 Lupine Drive, Torrington, WY 82240</li>
@@ -457,7 +457,7 @@
                     <div class="warning-box-title">重要提醒</div>
                     <div class="warning-box-content">
                         <ul style="margin-left: 20px; margin-top: 10px;">
-                            <li><strong>有效期格式：</strong>必须是 MM/YYYY（月/年），例如 12/2025，不要填成其他格式</li>
+                            <li><strong>有效期格式：</strong>必须是 MM/YY（月/年，两位年份），例如 11/31，不要填成其他格式</li>
                             <li><strong>邮政编码：</strong>必须是 82240（5位数字），不要填成其他格式</li>
                             <li><strong>拒卡处理：</strong>如果出现拒卡，请换浏览器、换IP节点后重试</li>
                             <li><strong>接码验证：</strong>如果出现接码验证，这是账号问题，需要换号，与商品质量无关</li>
@@ -478,12 +478,12 @@
                         Q1: 有效期应该怎么填写？
                     </div>
                     <div class="step-content">
-                        <strong>A:</strong> 有效期格式必须是 <span class="field-highlight">MM/YYYY</span>（月/年）。
+                        <strong>A:</strong> 有效期格式必须是 <span class="field-highlight">MM/YY</span>（月/年，两位年份）。
                         <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li>正确示例：<span class="field-highlight">12/2025</span> ✅</li>
-                            <li>错误示例：12/25 ❌ | 1225 ❌ | 2025-12 ❌</li>
+                            <li>正确示例：<span class="field-highlight">11/31</span> ✅（表示2031年11月）</li>
+                            <li>错误示例：11/2031 ❌ | 1131 ❌ | 2031-11 ❌</li>
                         </ul>
-                        月份必须是两位数（01-12），年份必须是四位数。
+                        月份必须是两位数（01-12），年份是两位数（如31表示2031年）。
                     </div>
                 </div>
 
