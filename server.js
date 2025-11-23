@@ -526,6 +526,11 @@ app.get('/guide', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', '使用说明.html'));
 });
 
+// Gemini 使用说明页面
+app.get('/gemini-guide', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'gemini-使用说明.html'));
+});
+
 // 算账工具页面
 app.get('/accounting', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'accounting.html'));

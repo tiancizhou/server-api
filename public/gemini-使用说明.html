@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini 绑卡使用说明</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 
+                         'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+
+        .step {
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .step-content {
+            color: #4b5563;
+            margin-left: 38px;
+        }
+
+        .step-content ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .step-content li {
+            margin-bottom: 8px;
+        }
+
+        .highlight-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .highlight-box-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .highlight-box-content {
+            color: #78350f;
+            line-height: 1.8;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+
+        .info-box-content {
+            color: #1e3a8a;
+        }
+
+        .warning-box {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+
+        .warning-box-title {
+            font-weight: 600;
+            color: #991b1b;
+            margin-bottom: 5px;
+        }
+
+        .warning-box-content {
+            color: #7f1d1d;
+        }
+
+        .error-box {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+
+        .error-box-title {
+            font-weight: 600;
+            color: #dc2626;
+            margin-bottom: 5px;
+        }
+
+        .error-box-content {
+            color: #991b1b;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+
+        .success-box-title {
+            font-weight: 600;
+            color: #065f46;
+            margin-bottom: 5px;
+        }
+
+        .success-box-content {
+            color: #047857;
+        }
+
+        .format-example {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .field-highlight {
+            background: #fef3c7;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .step-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Gemini 绑卡使用说明</h1>
+            <p>正确填写信息，轻松完成 Gemini 绑卡</p>
+        </div>
+
+        <div class="card">
+            <!-- 重要提示 -->
+            <div class="highlight-box">
+                <div class="highlight-box-title">
+                    ⚠️ 重要提示
+                </div>
+                <div class="highlight-box-content">
+                    <strong>卡密兑换地址：</strong><br>
+                    <a href="http://qqlovecc.natapp1.cc" target="_blank" style="color: #92400e; text-decoration: underline;">http://qqlovecc.natapp1.cc</a>
+                </div>
+            </div>
+
+            <!-- 第一步：激活卡片并获取信息 -->
+            <div class="section">
+                <div class="section-title">第一步：激活卡片并获取卡片信息</div>
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        激活卡片
+                    </div>
+                    <div class="step-content">
+                        <ul>
+                            <li>在卡密兑换地址输入您的<strong>卡密</strong>（格式：mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）</li>
+                            <li>点击"查询"按钮查看卡片状态</li>
+                            <li>如果显示"未激活"，点击"立即激活"按钮</li>
+                            <li>激活成功后，复制以下信息：
+                                <ul style="margin-top: 10px; margin-left: 20px;">
+                                    <li><strong>卡号</strong>（16位数字）</li>
+                                    <li><strong>有效期</strong>（MM/YYYY 格式，例如：12/2025）</li>
+                                    <li><strong>CVC</strong>（3位安全码）</li>
+                                    <li><strong>账单地址</strong>（131 Lupine Drive, Torrington, WY 82240）</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第二步：填写卡片信息 -->
+            <div class="section">
+                <div class="section-title">第二步：在 Gemini 支付页面填写卡片信息</div>
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        正确填写各项信息
+                    </div>
+                    <div class="step-content">
+                        <p style="margin-bottom: 15px;"><strong>请仔细填写以下信息，避免填错：</strong></p>
+                        
+                        <div class="info-box">
+                            <div class="info-box-title">💳 卡号（Card Number）</div>
+                            <div class="info-box-content">
+                                填写16位卡号，确保没有空格或多余字符
+                            </div>
+                        </div>
+
+                        <div class="warning-box">
+                            <div class="warning-box-title">⚠️ 有效期（Expiration Date）</div>
+                            <div class="warning-box-content">
+                                <strong>重要！这是最容易填错的地方！</strong><br>
+                                <ul style="margin-top: 10px; margin-left: 20px;">
+                                    <li>格式：<span class="field-highlight">MM/YYYY</span>（月/年）</li>
+                                    <li>例如：如果显示 <span class="field-highlight">12/2025</span>，则填写 <span class="field-highlight">12/2025</span></li>
+                                    <li><strong>不要填成：</strong>12/25、1225、2025-12 等错误格式</li>
+                                    <li><strong>正确格式：</strong>月份必须是两位数（01-12），年份必须是四位数（如2025）</li>
+                                </ul>
+                                <div class="format-example" style="margin-top: 10px;">
+                                    正确示例：12/2025 ✅<br>
+                                    错误示例：12/25 ❌ | 1225 ❌ | 2025-12 ❌
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="warning-box">
+                            <div class="warning-box-title">⚠️ 邮政编码（ZIP Code / Postal Code）</div>
+                            <div class="warning-box-content">
+                                <strong>重要！这也是容易填错的地方！</strong><br>
+                                <ul style="margin-top: 10px; margin-left: 20px;">
+                                    <li>账单地址对应的邮政编码是：<span class="field-highlight">82240</span></li>
+                                    <li>请直接填写：<span class="field-highlight">82240</span>（5位数字）</li>
+                                    <li><strong>不要填成：</strong>8224、82240-0000、WY 82240 等错误格式</li>
+                                    <li><strong>正确格式：</strong>纯数字，5位，就是 82240</li>
+                                </ul>
+                                <div class="format-example" style="margin-top: 10px;">
+                                    正确示例：82240 ✅<br>
+                                    错误示例：8224 ❌ | 82240-0000 ❌ | WY 82240 ❌
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-box-title">🔐 CVC（安全码）</div>
+                            <div class="info-box-content">
+                                填写3位CVC安全码，确保数字正确
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-box-title">📍 账单地址</div>
+                            <div class="info-box-content">
+                                填写：<span class="field-highlight">131 Lupine Drive, Torrington, WY 82240</span>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <div class="info-box-title">👤 持卡人姓名（Cardholder Name）</div>
+                            <div class="info-box-content">
+                                填写任意英文姓名，例如：<span class="field-highlight">John Smith</span> 或 <span class="field-highlight">Mary Johnson</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 常见错误和解决方案 -->
+            <div class="section">
+                <div class="section-title">❌ 常见错误和解决方案</div>
+                
+                <div class="error-box">
+                    <div class="error-box-title">🚫 报错类型：拒卡（Card Declined）</div>
+                    <div class="error-box-content">
+                        <p style="margin-bottom: 10px;"><strong>这是唯一可能出现的报错类型。</strong></p>
+                        <p><strong>当出现拒卡时，请按以下步骤操作：</strong></p>
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li><strong>1. 换浏览器</strong>：尝试使用不同的浏览器（Chrome、Firefox、Edge等）</li>
+                            <li><strong>2. 换IP节点</strong>：更换网络环境或使用VPN，更换IP地址</li>
+                            <li><strong>3. 检查信息填写</strong>：确认有效期格式为 MM/YYYY，邮政编码为 82240</li>
+                            <li><strong>4. 稍后重试</strong>：等待一段时间后再次尝试</li>
+                        </ul>
+                        <div class="highlight-box" style="margin-top: 15px; background: #fef3c7;">
+                            <div class="highlight-box-title">💡 重要提示</div>
+                            <div class="highlight-box-content">
+                                拒卡通常与<strong>浏览器环境、IP节点或网络环境</strong>有关，与卡片本身无关。请尝试更换浏览器和IP节点后重试。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">⚠️ 出现接码验证（需要手机验证码）</div>
+                    <div class="warning-box-content">
+                        <p style="margin-bottom: 10px;"><strong>如果出现需要接码验证的情况：</strong></p>
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li><strong>这是账号（号）的问题，不是卡片的问题</strong></li>
+                            <li>需要<strong>换号</strong>（更换Google账号）</li>
+                            <li><strong>与我们的商品质量无关</strong>，这是Google账号的风控机制</li>
+                            <li>某些Google账号可能因为风控需要验证，这是正常现象</li>
+                        </ul>
+                        <div class="info-box" style="margin-top: 15px; background: #dbeafe;">
+                            <div class="info-box-title">📝 说明</div>
+                            <div class="info-box-content">
+                                接码验证是Google账号的安全机制，与卡片无关。如果遇到此情况，请更换Google账号后重试。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">⚠️ Google 的其他报错</div>
+                    <div class="warning-box-content">
+                        <p style="margin-bottom: 10px;"><strong>如果遇到Google的其他报错信息：</strong></p>
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li>这些报错通常与<strong>Google账号、网络环境或操作方式</strong>有关</li>
+                            <li>不是卡片本身的问题</li>
+                            <li>请检查：
+                                <ul style="margin-top: 8px; margin-left: 20px;">
+                                    <li>Google账号是否正常</li>
+                                    <li>网络连接是否稳定</li>
+                                    <li>是否使用了正确的操作步骤</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 填写检查清单 -->
+            <div class="section">
+                <div class="section-title">✅ 填写检查清单</div>
+                <div class="step" style="background: #d1fae5; border-left-color: #10b981;">
+                    <div class="step-title" style="color: #059669;">
+                        在提交前，请确认以下信息都正确填写：
+                    </div>
+                    <div class="step-content">
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 10px;">✅ <strong>卡号：</strong>16位数字，无空格</li>
+                            <li style="margin-bottom: 10px;">✅ <strong>有效期：</strong>MM/YYYY 格式（例如：12/2025）</li>
+                            <li style="margin-bottom: 10px;">✅ <strong>CVC：</strong>3位数字</li>
+                            <li style="margin-bottom: 10px;">✅ <strong>邮政编码：</strong>82240（5位数字）</li>
+                            <li style="margin-bottom: 10px;">✅ <strong>账单地址：</strong>131 Lupine Drive, Torrington, WY 82240</li>
+                            <li style="margin-bottom: 10px;">✅ <strong>持卡人姓名：</strong>任意英文姓名</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 注意事项 -->
+            <div class="section">
+                <div class="section-title">⚠️ 重要注意事项</div>
+                <div class="warning-box">
+                    <div class="warning-box-title">重要提醒</div>
+                    <div class="warning-box-content">
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li><strong>有效期格式：</strong>必须是 MM/YYYY（月/年），例如 12/2025，不要填成其他格式</li>
+                            <li><strong>邮政编码：</strong>必须是 82240（5位数字），不要填成其他格式</li>
+                            <li><strong>拒卡处理：</strong>如果出现拒卡，请换浏览器、换IP节点后重试</li>
+                            <li><strong>接码验证：</strong>如果出现接码验证，这是账号问题，需要换号，与商品质量无关</li>
+                            <li><strong>Google报错：</strong>Google的其他报错通常与账号或网络环境有关，不是卡片问题</li>
+                            <li>卡密只能激活一次，请妥善保管</li>
+                            <li>激活后请立即保存卡片信息</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 常见问题 -->
+            <div class="section">
+                <div class="section-title">❓ 常见问题</div>
+                
+                <div class="step" style="background: white; border-left-color: #10b981;">
+                    <div class="step-title" style="color: #059669;">
+                        Q1: 有效期应该怎么填写？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 有效期格式必须是 <span class="field-highlight">MM/YYYY</span>（月/年）。
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li>正确示例：<span class="field-highlight">12/2025</span> ✅</li>
+                            <li>错误示例：12/25 ❌ | 1225 ❌ | 2025-12 ❌</li>
+                        </ul>
+                        月份必须是两位数（01-12），年份必须是四位数。
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #10b981;">
+                    <div class="step-title" style="color: #059669;">
+                        Q2: 邮政编码应该填什么？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 邮政编码填写 <span class="field-highlight">82240</span>（5位数字）。
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li>正确示例：<span class="field-highlight">82240</span> ✅</li>
+                            <li>错误示例：8224 ❌ | 82240-0000 ❌ | WY 82240 ❌</li>
+                        </ul>
+                        直接填写5位数字即可，不要添加其他字符。
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #ef4444;">
+                    <div class="step-title" style="color: #dc2626;">
+                        Q3: 出现拒卡（Card Declined）怎么办？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 拒卡是唯一可能出现的报错类型。请按以下步骤处理：
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li><strong>1. 换浏览器</strong>：尝试使用不同的浏览器</li>
+                            <li><strong>2. 换IP节点</strong>：更换网络环境或使用VPN</li>
+                            <li><strong>3. 检查信息</strong>：确认有效期和邮政编码格式正确</li>
+                            <li><strong>4. 稍后重试</strong>：等待一段时间后再次尝试</li>
+                        </ul>
+                        拒卡通常与浏览器环境、IP节点或网络环境有关，与卡片本身无关。
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #f59e0b;">
+                    <div class="step-title" style="color: #92400e;">
+                        Q4: 出现接码验证（需要手机验证码）怎么办？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> 如果出现需要接码验证的情况：
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li><strong>这是账号（号）的问题，不是卡片的问题</strong></li>
+                            <li>需要<strong>换号</strong>（更换Google账号）</li>
+                            <li><strong>与我们的商品质量无关</strong>，这是Google账号的风控机制</li>
+                            <li>某些Google账号可能因为风控需要验证，这是正常现象</li>
+                        </ul>
+                        请更换Google账号后重试。
+                    </div>
+                </div>
+
+                <div class="step" style="background: white; border-left-color: #3b82f6;">
+                    <div class="step-title" style="color: #1e40af;">
+                        Q5: 遇到Google的其他报错怎么办？
+                    </div>
+                    <div class="step-content">
+                        <strong>A:</strong> Google的其他报错通常与以下因素有关：
+                        <ul style="margin-top: 10px; margin-left: 20px;">
+                            <li>Google账号状态</li>
+                            <li>网络环境</li>
+                            <li>操作方式</li>
+                        </ul>
+                        这些报错不是卡片本身的问题。请检查Google账号是否正常，网络连接是否稳定。
+                    </div>
+                </div>
+            </div>
+
+            <!-- 开始使用按钮 -->
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="/" class="btn" style="display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s;">🚀 立即前往激活</a>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: white; margin-top: 30px; opacity: 0.8;">
+            <p>请仔细阅读说明，正确填写信息，避免填错有效期和邮政编码</p>
+        </div>
+    </div>
+</body>
+</html>
+
