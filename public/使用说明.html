@@ -221,6 +221,47 @@
             margin: 20px 0;
         }
 
+        .tutorial-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin: 20px 0;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tutorial-image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .tutorial-image-caption {
+            margin-top: 10px;
+            color: #6b7280;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .image-grid-item {
+            text-align: center;
+        }
+
+        .image-grid-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
         .format-example {
             background: #1f2937;
             color: #10b981;
@@ -286,6 +327,13 @@
                             <li>点击"查询"按钮</li>
                             <li>系统会显示相应的信息</li>
                         </ul>
+                        <!-- 图片示例：取消注释下面的代码来显示图片 -->
+                        <!--
+                        <div class="tutorial-image-container">
+                            <img src="/images/example-query.png" alt="查询示例" class="tutorial-image">
+                            <div class="tutorial-image-caption">图1：输入卡密查询状态示例</div>
+                        </div>
+                        -->
                         <div class="info-box" style="margin-top: 15px;">
                             <div class="info-box-title">💡 重要提示</div>
                             <div class="info-box-content">

@@ -232,6 +232,47 @@
             color: #92400e;
         }
 
+        .tutorial-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin: 20px 0;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tutorial-image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .tutorial-image-caption {
+            margin-top: 10px;
+            color: #6b7280;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .image-grid-item {
+            text-align: center;
+        }
+
+        .image-grid-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 28px;
@@ -270,162 +311,69 @@
             <div class="section">
                 <div class="section-title">第一步：激活卡片并获取卡片信息</div>
                 <div class="step">
-                    <div class="step-title">
-                        <span class="step-number">1</span>
-                        激活卡片
-                    </div>
                     <div class="step-content">
-                        <ul>
-                            <li>在卡密兑换地址输入您的<strong>卡密</strong>（格式：mio-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）</li>
-                            <li>点击"查询"按钮查看卡片状态</li>
-                            <li>如果显示"未激活"，点击"立即激活"按钮</li>
-                            <li>激活成功后，复制以下信息：
-                                <ul style="margin-top: 10px; margin-left: 20px;">
-                                    <li><strong>卡号</strong>（16位数字）</li>
-                                    <li><strong>有效期</strong>（MM/YY 格式，例如：11/31）</li>
-                                    <li><strong>CVC</strong>（3位安全码）</li>
-                                    <li><strong>账单地址</strong>（131 Lupine Drive, Torrington, WY 82240）</li>
-                                </ul>
-                            </li>
+                        <p style="margin-bottom: 15px;">在卡密兑换地址输入您的<strong>卡密</strong>，激活卡片后复制以下信息：</p>
+                        <ul style="margin-bottom: 20px;">
+                            <li><strong>卡号</strong>（16位数字）</li>
+                            <li><strong>有效期</strong>（MM/YY 格式，例如：11/31）</li>
+                            <li><strong>CVC</strong>（3位安全码）</li>
+                            <li><strong>账单地址</strong>（131 Lupine Drive, Torrington, WY 82240）</li>
+                            <li><strong>邮政编码</strong>（82240）</li>
                         </ul>
                     </div>
                 </div>
             </div>
 
-            <!-- 第二步：填写卡片信息 -->
+            <!-- 第二步：绑卡流程（图片教程） -->
             <div class="section">
-                <div class="section-title">第二步：在 Gemini 支付页面填写卡片信息</div>
+                <div class="section-title">第二步：Gemini 绑卡完整流程</div>
                 <div class="step">
-                    <div class="step-title">
-                        <span class="step-number">2</span>
-                        正确填写各项信息
-                    </div>
                     <div class="step-content">
-                        <p style="margin-bottom: 15px;"><strong>请仔细填写以下信息，避免填错：</strong></p>
-                        
-                        <div class="info-box">
-                            <div class="info-box-title">💳 卡号（Card Number）</div>
-                            <div class="info-box-content">
-                                填写16位卡号，确保没有空格或多余字符
-                            </div>
+                        <p style="margin-bottom: 20px; color: #4b5563; font-size: 16px;">
+                            请按照下方图片教程的步骤操作，图片中已用红色箭头和标注标明了每个步骤：
+                        </p>
+                        <div class="tutorial-image-container">
+                            <img src="/images/gemini-bind-card-tutorial.png" alt="Gemini 绑卡教程" class="tutorial-image">
+                            <div class="tutorial-image-caption">图1：Gemini 绑卡完整流程教程（7个步骤）</div>
                         </div>
-
-                        <div class="warning-box">
-                            <div class="warning-box-title">⚠️ 有效期（Expiration Date）</div>
-                            <div class="warning-box-content">
-                                <strong>重要！这是最容易填错的地方！</strong><br>
+                        <div class="info-box" style="margin-top: 20px;">
+                            <div class="info-box-title">💡 重要提示</div>
+                            <div class="info-box-content">
                                 <ul style="margin-top: 10px; margin-left: 20px;">
-                                    <li>格式：<span class="field-highlight">MM/YY</span>（月/年，两位年份）</li>
-                                    <li>例如：如果显示 <span class="field-highlight">11/31</span>，则填写 <span class="field-highlight">11/31</span>（表示11月/2031年）</li>
-                                    <li><strong>不要填成：</strong>11/2031、1131、2031-11 等错误格式</li>
-                                    <li><strong>正确格式：</strong>月份必须是两位数（01-12），年份是两位数（如31表示2031年）</li>
+                                    <li><strong>有效期格式：</strong>MM/YY（月/年，两位年份），例如：11/31</li>
+                                    <li><strong>邮政编码：</strong>82240（5位数字）</li>
+                                    <li><strong>账单地址：</strong>131 Lupine Drive, Torrington, WY 82240</li>
+                                    <li><strong>持卡人姓名：</strong>填写任意英文姓名</li>
                                 </ul>
-                                <div class="format-example" style="margin-top: 10px;">
-                                    正确示例：11/31 ✅（表示2031年11月）<br>
-                                    错误示例：11/2031 ❌ | 1131 ❌ | 2031-11 ❌
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="warning-box">
-                            <div class="warning-box-title">⚠️ 邮政编码（ZIP Code / Postal Code）</div>
-                            <div class="warning-box-content">
-                                <strong>重要！这也是容易填错的地方！</strong><br>
-                                <ul style="margin-top: 10px; margin-left: 20px;">
-                                    <li>账单地址对应的邮政编码是：<span class="field-highlight">82240</span></li>
-                                    <li>请直接填写：<span class="field-highlight">82240</span>（5位数字）</li>
-                                    <li><strong>不要填成：</strong>8224、82240-0000、WY 82240 等错误格式</li>
-                                    <li><strong>正确格式：</strong>纯数字，5位，就是 82240</li>
-                                </ul>
-                                <div class="format-example" style="margin-top: 10px;">
-                                    正确示例：82240 ✅<br>
-                                    错误示例：8224 ❌ | 82240-0000 ❌ | WY 82240 ❌
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="info-box">
-                            <div class="info-box-title">🔐 CVC（安全码）</div>
-                            <div class="info-box-content">
-                                填写3位CVC安全码，确保数字正确
-                            </div>
-                        </div>
-
-                        <div class="info-box">
-                            <div class="info-box-title">📍 账单地址</div>
-                            <div class="info-box-content">
-                                填写：<span class="field-highlight">131 Lupine Drive, Torrington, WY 82240</span>
-                            </div>
-                        </div>
-
-                        <div class="info-box">
-                            <div class="info-box-title">👤 持卡人姓名（Cardholder Name）</div>
-                            <div class="info-box-content">
-                                填写任意英文姓名，例如：<span class="field-highlight">John Smith</span> 或 <span class="field-highlight">Mary Johnson</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 常见错误和解决方案 -->
+            <!-- 常见错误和解决方案（图片教程） -->
             <div class="section">
-                <div class="section-title">❌ 常见错误和解决方案</div>
-                
-                <div class="error-box">
-                    <div class="error-box-title">🚫 报错类型：拒卡（Card Declined）</div>
-                    <div class="error-box-content">
-                        <p style="margin-bottom: 10px;"><strong>这是唯一可能出现的报错类型。</strong></p>
-                        <p><strong>当出现拒卡时，请按以下步骤操作：</strong></p>
-                        <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li><strong>1. 换浏览器</strong>：尝试使用不同的浏览器（Chrome、Firefox、Edge等）</li>
-                            <li><strong>2. 换IP节点</strong>：更换网络环境或使用VPN，更换IP地址</li>
-                            <li><strong>3. 检查信息填写</strong>：确认有效期格式为 MM/YY（例如：11/31），邮政编码为 82240</li>
-                            <li><strong>4. 稍后重试</strong>：等待一段时间后再次尝试</li>
-                        </ul>
-                        <div class="highlight-box" style="margin-top: 15px; background: #fef3c7;">
-                            <div class="highlight-box-title">💡 重要提示</div>
-                            <div class="highlight-box-content">
-                                拒卡通常与<strong>浏览器环境、IP节点或网络环境</strong>有关，与卡片本身无关。请尝试更换浏览器和IP节点后重试。
-                            </div>
+                <div class="section-title">❌ 绑卡报错解决方法</div>
+                <div class="step">
+                    <div class="step-content">
+                        <p style="margin-bottom: 20px; color: #4b5563; font-size: 16px;">
+                            如果绑卡时遇到错误，请按照下方图片教程的步骤解决。图片中详细标注了每个操作步骤：
+                        </p>
+                        <div class="tutorial-image-container">
+                            <img src="/images/gemini-error-solution.png" alt="Gemini 绑卡报错解决方法" class="tutorial-image">
+                            <div class="tutorial-image-caption">图2：Gemini 绑卡报错解决方法（4个步骤）</div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="warning-box">
-                    <div class="warning-box-title">⚠️ 出现接码验证（需要手机验证码）</div>
-                    <div class="warning-box-content">
-                        <p style="margin-bottom: 10px;"><strong>如果出现需要接码验证的情况：</strong></p>
-                        <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li><strong>这是账号（号）的问题，不是卡片的问题</strong></li>
-                            <li>需要<strong>换号</strong>（更换Google账号）</li>
-                            <li><strong>与我们的商品质量无关</strong>，这是Google账号的风控机制</li>
-                            <li>某些Google账号可能因为风控需要验证，这是正常现象</li>
-                        </ul>
-                        <div class="info-box" style="margin-top: 15px; background: #dbeafe;">
-                            <div class="info-box-title">📝 说明</div>
-                            <div class="info-box-content">
-                                接码验证是Google账号的安全机制，与卡片无关。如果遇到此情况，请更换Google账号后重试。
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="warning-box">
-                    <div class="warning-box-title">⚠️ Google 的其他报错</div>
-                    <div class="warning-box-content">
-                        <p style="margin-bottom: 10px;"><strong>如果遇到Google的其他报错信息：</strong></p>
-                        <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li>这些报错通常与<strong>Google账号、网络环境或操作方式</strong>有关</li>
-                            <li>不是卡片本身的问题</li>
-                            <li>请检查：
-                                <ul style="margin-top: 8px; margin-left: 20px;">
-                                    <li>Google账号是否正常</li>
-                                    <li>网络连接是否稳定</li>
-                                    <li>是否使用了正确的操作步骤</li>
+                        <div class="warning-box" style="margin-top: 20px;">
+                            <div class="warning-box-title">⚠️ 重要提示</div>
+                            <div class="warning-box-content">
+                                <ul style="margin-top: 10px; margin-left: 20px;">
+                                    <li><strong>使用美国节点：</strong>确保使用美国 IP 地址</li>
+                                    <li><strong>邮政编码：</strong>必须填写 82240</li>
+                                    <li><strong>关闭支付资料后：</strong>需要刷新页面，然后重新进入验证卡的界面</li>
+                                    <li>如果仍然失败，请尝试更换浏览器或网络环境</li>
                                 </ul>
-                            </li>
-                        </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -475,76 +423,38 @@
                 
                 <div class="step" style="background: white; border-left-color: #10b981;">
                     <div class="step-title" style="color: #059669;">
-                        Q1: 有效期应该怎么填写？
+                        Q1: 有效期和邮政编码应该怎么填写？
                     </div>
                     <div class="step-content">
-                        <strong>A:</strong> 有效期格式必须是 <span class="field-highlight">MM/YY</span>（月/年，两位年份）。
+                        <strong>A:</strong> 
                         <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li>正确示例：<span class="field-highlight">11/31</span> ✅（表示2031年11月）</li>
-                            <li>错误示例：11/2031 ❌ | 1131 ❌ | 2031-11 ❌</li>
+                            <li><strong>有效期：</strong>MM/YY 格式（例如：11/31），不要填成 11/2031 或其他格式</li>
+                            <li><strong>邮政编码：</strong>82240（5位数字），不要添加其他字符</li>
                         </ul>
-                        月份必须是两位数（01-12），年份是两位数（如31表示2031年）。
-                    </div>
-                </div>
-
-                <div class="step" style="background: white; border-left-color: #10b981;">
-                    <div class="step-title" style="color: #059669;">
-                        Q2: 邮政编码应该填什么？
-                    </div>
-                    <div class="step-content">
-                        <strong>A:</strong> 邮政编码填写 <span class="field-highlight">82240</span>（5位数字）。
-                        <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li>正确示例：<span class="field-highlight">82240</span> ✅</li>
-                            <li>错误示例：8224 ❌ | 82240-0000 ❌ | WY 82240 ❌</li>
-                        </ul>
-                        直接填写5位数字即可，不要添加其他字符。
                     </div>
                 </div>
 
                 <div class="step" style="background: white; border-left-color: #ef4444;">
                     <div class="step-title" style="color: #dc2626;">
-                        Q3: 出现拒卡（Card Declined）怎么办？
+                        Q2: 绑卡失败怎么办？
                     </div>
                     <div class="step-content">
-                        <strong>A:</strong> 拒卡是唯一可能出现的报错类型。请按以下步骤处理：
+                        <strong>A:</strong> 请参考上方的"绑卡报错解决方法"图片教程。主要步骤：
                         <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li><strong>1. 换浏览器</strong>：尝试使用不同的浏览器</li>
-                            <li><strong>2. 换IP节点</strong>：更换网络环境或使用VPN</li>
-                            <li><strong>3. 检查信息</strong>：确认有效期和邮政编码格式正确</li>
-                            <li><strong>4. 稍后重试</strong>：等待一段时间后再次尝试</li>
+                            <li>访问 Google Payments Center 关闭支付资料</li>
+                            <li>使用美国 IP 节点</li>
+                            <li>确保邮政编码填写 82240</li>
+                            <li>刷新页面后重新尝试绑卡</li>
                         </ul>
-                        拒卡通常与浏览器环境、IP节点或网络环境有关，与卡片本身无关。
                     </div>
                 </div>
 
                 <div class="step" style="background: white; border-left-color: #f59e0b;">
                     <div class="step-title" style="color: #92400e;">
-                        Q4: 出现接码验证（需要手机验证码）怎么办？
+                        Q3: 出现接码验证（需要手机验证码）怎么办？
                     </div>
                     <div class="step-content">
-                        <strong>A:</strong> 如果出现需要接码验证的情况：
-                        <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li><strong>这是账号（号）的问题，不是卡片的问题</strong></li>
-                            <li>需要<strong>换号</strong>（更换Google账号）</li>
-                            <li><strong>与我们的商品质量无关</strong>，这是Google账号的风控机制</li>
-                            <li>某些Google账号可能因为风控需要验证，这是正常现象</li>
-                        </ul>
-                        请更换Google账号后重试。
-                    </div>
-                </div>
-
-                <div class="step" style="background: white; border-left-color: #3b82f6;">
-                    <div class="step-title" style="color: #1e40af;">
-                        Q5: 遇到Google的其他报错怎么办？
-                    </div>
-                    <div class="step-content">
-                        <strong>A:</strong> Google的其他报错通常与以下因素有关：
-                        <ul style="margin-top: 10px; margin-left: 20px;">
-                            <li>Google账号状态</li>
-                            <li>网络环境</li>
-                            <li>操作方式</li>
-                        </ul>
-                        这些报错不是卡片本身的问题。请检查Google账号是否正常，网络连接是否稳定。
+                        <strong>A:</strong> 这是 Google 账号的风控机制，与卡片无关。需要<strong>更换 Google 账号</strong>后重试。
                     </div>
                 </div>
             </div>
